@@ -1,2 +1,9 @@
+language: python
+python:
+  - "3.5"
+
+install: "pip install flask"
+script: nosetests
+
 notifications:
   slack: oblong-antelope:1eXsnKpfCiWpdAGGizILVk7j
