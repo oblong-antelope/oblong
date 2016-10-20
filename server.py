@@ -11,10 +11,12 @@ CANNED_RESPONSES =\
                        and j['role'].lower() == 'supervisor')
           , [ { 'name': 'Dr. Tim Timson'
               , 'department': 'Department of Tim Research'
+              , 'email': 'tim@timresearch.ic.ac.uk'
               , 'info': '/api/person/<key>'
               } 
             , { 'name': 'Dr. Timothy Timsworth'
               , 'department': 'Department of Tim Rights'
+              , 'email': 'tim@timrights.ic.ac.uk'
               , 'info': '/api/person/<key>'
               } 
             ]
