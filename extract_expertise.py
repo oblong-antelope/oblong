@@ -77,11 +77,11 @@ def split_title(title):
     returns : a list of keywords
 
     >>> split_title("ABA+: assumption-based argumentation with preferences")
-    ['ABA+', 'assumption-based', 'argumentation', 'preferences']
+    ['aba+', 'assumption-based', 'argumentation', 'preferences']
     """
     s = list(title)
     words = ''.join([o for o in s if not o in punc]).split()
-    return [word for word in words if word not in connectives]
+    return [word.lower() for word in words if word not in connectives]
 
 def augment_author(author, profiles, words):
     """Given a dict of profiles, an author name, and a list of words
@@ -105,8 +105,7 @@ def augment_author(author, profiles, words):
         else:
             author_words[word] += 1
     return profiles
-
-
+	
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
