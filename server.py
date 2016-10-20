@@ -4,39 +4,51 @@
 from collections import defaultdict
 import json
 import uuid
-from flask import Flask, request
+from flask import Flask, request, abort
+
+CANNED_RESPONSES =\
+        [ ( lambda j: (j['speciality'].lower() == 'artificial intelligence'
+                       and j['role'].lower() == 'supervisor')
+          , [ { 'name': 'Dr. Tim Timson'
+              , 'department': 'Department of Tim Research'
+              , 'info': '/api/person/<key>'
+              } 
+            , { 'name': 'Dr. Timothy Timsworth'
+              , 'department': 'Department of Tim Rights'
+              , 'info': '/api/person/<key>'
+              } 
+            ]
+          )
+        ]
 
 app = Flask(__name__)
-
 queries = {}
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
     if request.is_json:
-        json = defaultdict(lambda: None)
-        json.update(request.get_json())
+        request_json = defaultdict(lambda: '')
+        request_json.update(request.get_json())
     else:
         return 'JSON, please.', 415
-    uuid = str(uuid.uuid4())
-    if (json['speciality'] == 'artificial intelligence' 
-        and json['role'] == 'supervisor'):
-        queries[uuid] = [ {
-            'name': 'Dr. Tim Timson',
-            'department': 'Department of Tim Research',
-            'info': '/api/person/<key>'
-        }, {
-            'name': 'Dr. Timothy Timsworth',
-            'department': 'Department of Tim Rights',
-            'info': '/api/person/<key>'
-        } ]
-    else:
-        queries[uuid] = []
+    query_id = str(uuid.uuid4())
+    for cond, value in CANNED_RESPONSES:
+        if cond(request_json):
+            queries[query_id] = value
+    if queries.get(query_id, None) is None:
+        queries[query_id] = []
     response = {
         'success': True,
-        'results': '/api/query/{}'.format(uuid)
+        'results': '/api/query/{}'.format(query_id)
     }
-    return response
+    return json.dumps(response)
 
 @app.route('/api/query/<query_id>')
 def get_query(query_id):
-    return json.dumps(queries[uuid])
+    if query_id in queries:
+        return json.dumps(queries[query_id])
+    else:
+        abort(404)
+
+if __name__ == '__main__':
+    app.run()
