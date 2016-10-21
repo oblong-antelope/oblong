@@ -5,9 +5,10 @@ from collections import defaultdict
 import json
 import uuid
 from flask import Flask, request, abort
+from flask_cors import CORS
 
 CANNED_RESPONSES =\
-        [ ( lambda j: (j['speciality'].lower() == 'artificial intelligence'
+        [ ( lambda j: (j['expertise'].lower() == 'artificial intelligence'
                        and j['role'].lower() == 'supervisor')
           , [ { 'name': 'Dr. Tim Timson'
               , 'department': 'Department of Tim Research'
@@ -24,6 +25,7 @@ CANNED_RESPONSES =\
         ]
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 queries = {}
 
 @app.route('/api/query/submit', methods=['POST'])
