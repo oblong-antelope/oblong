@@ -80,7 +80,7 @@ def submit_query():
     for cond, values in CANNED_RESPONSES:
         if cond(request_json):
             resp = []
-            for i, v in enumerate(values):
+            for i in values:
                 resp.append({k: PEOPLE[i][k] for k in 
                              ('name', 'email', 'department')})
                 person = '/api/person/{}/'.format(i)
