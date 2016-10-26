@@ -1,2 +1,2 @@
-pip install flask
-pip install flask-cors
+flask>=0.11
+flask-cors
