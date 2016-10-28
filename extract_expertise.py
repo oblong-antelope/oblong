@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
+from nltk.stem import *
+from nltk import pos_tag
+'''Notes: Possible stemmers: porter, lancaster, snowball, wordnet lemmatization (may require verb/noun POS tagger) all in NLTK - which is best?'''
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
@@ -34,8 +37,53 @@ papers = [ {"title"   : "Argumentation-based multi-agent decision making with pr
             "date"    : "2016"}
          ]
 
+
+papers2 = [
+           {"title"   : "Making make makes maker made",
+            "authors" : " F. Toni",
+            "date"    : "2016"}
+          ]
+
+papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "On the interplay between games, argumentation and dialogues",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Discontinuity-free decision support with quantitative argumentation debates",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Abstract argumentation for case-based reasoning",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "ABA+: assumption-based argumentation with preferences",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Properties of ABA+ for non-monotonic reasoning",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Smarter electricity and argumentation theory",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Online Argumentation-Based Platform for Recommending Medical Literature",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Justifying Answer Sets using Argumentation",
+            "authors" : "F. Toni",
+            "date"    : "2016"},
+           {"title"   : "Argument Graphs and Assumption-Based Argumentation",
+            "authors" : "F. Toni",
+            "date"    : "2016"}
+         ]
+
+papers4 = [
+           {"title"   : "Do you really think it is weakness that yields to temptation? I tell you that there are terrible temptations which it requires strength, strength and courage to yield to",
+            "authors" : " F. Toni",
+            "date"    : "2016"}
+          ]
+
 punc = ',.:;' #punctuation we want to remove
-connectives = ['for', 'and', 'a', 'the', 'with'] #boring words to get rid of
+connectives = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between'] #boring words to get rid of
 
 def build_profiles(papers):
     """Produces a dictionary of name:profile pairs. The profiles are a
@@ -60,13 +108,34 @@ def split_authors(authors):
 
     returns : a list of author names
 
-    >>> split_authors("K. Cyras, K. Satoh, and F. Toni")
+     split_authors("K. Cyras, K. Satoh, and F. Toni")
     ['K. Cyras', 'K. Satoh', 'F. Toni']
     """
     split = authors.split(', ')
     author_list = split[:-1]
     author_list.extend(author for author in split[-1].split('and ') if author != '')
     return author_list
+
+def get_lemma_pos(tag):
+
+    if tag.startswith('J'):
+        return 'a'
+    elif tag.startswith('V'):
+        return 'v'
+    elif tag.startswith('N'):
+        return 'n'
+    elif tag.startswith('R'):
+        return 'r'
+    else:
+        return 'n'
+
+'''wl2 = WordNetLemmatizer()
+text=nltk.word_tokenize("Online Argumentation-Based Platform for Recommending Medical Literature")
+text1 = [word.lower() for word in text]
+list1 = [(x,get_lemma_pos(y)) for (x,y) in list]
+list2 = [wl2.lemmatize(x,pos=y) for (x,y) in list1]
+print list2'''
+
 
 def split_title(title):
     """Produces a list of keywords from the paper title with
@@ -76,12 +145,16 @@ def split_title(title):
 
     returns : a list of keywords
 
-    >>> split_title("ABA+: assumption-based argumentation with preferences")
+     split_title("ABA+: assumption-based argumentation with preferences")
     ['aba+', 'assumption-based', 'argumentation', 'preferences']
     """
-    s = list(title)
-    words = ''.join([o for o in s if not o in punc]).split()
-    return [word.lower() for word in words if word not in connectives]
+    text=nltk.word_tokenize(title)
+    lowertext = [word.lower() for word in text]
+    taggedwords = nltk.pos_tag(lowertext)
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in connectives]
+    wl = WordNetLemmatizer()
+    list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]
+    return list2
 
 def augment_author(author, profiles, words):
     """Given a dict of profiles, an author name, and a list of words
@@ -93,7 +166,7 @@ def augment_author(author, profiles, words):
 
        returns : the augmented profile
 
-       >>> augment_author('F. Toni', {'F. Toni':{'argumentation':2}}, ['argumentation', 'preferences'])
+       augment_author('F. Toni', {'F. Toni':{'argumentation':2}}, ['argumentation', 'preferences'])
        {'F. Toni': {'argumentation': 3, 'preferences': 1}}
     """
     if author not in profiles:
@@ -105,6 +178,7 @@ def augment_author(author, profiles, words):
         else:
             author_words[word] += 1
     return profiles
+
 	
 if __name__ == "__main__":
     import doctest
