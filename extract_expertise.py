@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 from nltk.stem import *
 from nltk import pos_tag
+import nltk
 '''Notes: Possible stemmers: porter, lancaster, snowball, wordnet lemmatization (may require verb/noun POS tagger) all in NLTK - which is best?'''
 
 #Francesca Toni's publications from 2016
@@ -116,7 +117,7 @@ def split_authors(authors):
     author_list.extend(author for author in split[-1].split('and ') if author != '')
     return author_list
 
-def get_lemma_pos(tag):
+def get_lemma_pos(tag):  #needed to for part of speech tagging for lemmatizer
 
     if tag.startswith('J'):
         return 'a'
@@ -129,6 +130,7 @@ def get_lemma_pos(tag):
     else:
         return 'n'
 
+#testing purposes
 '''wl2 = WordNetLemmatizer()
 text=nltk.word_tokenize("Online Argumentation-Based Platform for Recommending Medical Literature")
 text1 = [word.lower() for word in text]
@@ -148,12 +150,12 @@ def split_title(title):
      split_title("ABA+: assumption-based argumentation with preferences")
     ['aba+', 'assumption-based', 'argumentation', 'preferences']
     """
-    text=nltk.word_tokenize(title)
-    lowertext = [word.lower() for word in text]
-    taggedwords = nltk.pos_tag(lowertext)
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in connectives]
-    wl = WordNetLemmatizer()
-    list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]
+    text = nltk.word_tokenize(title)                                           #tokenizing the title
+    lowertext = [word.lower() for word in text]                             #converting all words to lowercase
+    taggedwords = nltk.pos_tag(lowertext)                                    #tagging words as verb, noun etc to help lemmatizer
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in connectives] #converts those to format lemmatizer understands
+    wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
+    list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
 
 def augment_author(author, profiles, words):
