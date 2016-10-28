@@ -3,6 +3,7 @@
 '''Webserver to handle the back end of Oblong.'''
 from collections import defaultdict
 import json
+import os
 import uuid
 from flask import Flask, request, abort
 from flask_cors import CORS
@@ -11,7 +12,7 @@ PEOPLE =\
         [ { 'name': 'Dr. Tim Timson'
           , 'department': 'Department of Tim Research'
           , 'email': 'tim@timresearch.ic.ac.uk'
-          , 'awards': 
+          , 'awards':
             [ 'Tim Medal 2009'
             , 'Nobel Prize for Tim Research'
             ]
@@ -36,7 +37,7 @@ PEOPLE =\
         , { 'name': 'Dr. Timothy Timsworth'
           , 'department': 'Department of Tim Rights'
           , 'email': 'tim@timrights.ic.ac.uk'
-          , 'awards': 
+          , 'awards':
             [ 'Employee of the month June 2011'
             , "World's best dad"
             ]
@@ -81,7 +82,7 @@ def submit_query():
         if cond(request_json):
             resp = []
             for i in values:
-                resp.append({k: PEOPLE[i][k] for k in 
+                resp.append({k: PEOPLE[i][k] for k in
                              ('name', 'email', 'department')})
                 person = '/api/person/{}/'.format(i)
                 resp[-1]['research_summary'] = person + 'summary'
@@ -124,4 +125,5 @@ def person_full(person_id):
         abort(404)
 
 if __name__ == '__main__':
-    app.run()
+    heroku_port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=heroku_port)
