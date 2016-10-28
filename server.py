@@ -124,5 +124,5 @@ def person_full(person_id):
         abort(404)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000));
-    app.run(PORT=port)
+    heroku_port = int(os.environ.get('PORT', 5000));
+    app.run(port=heroku_port)
