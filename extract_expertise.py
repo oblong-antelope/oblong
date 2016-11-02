@@ -3,6 +3,7 @@
 from nltk.stem import *
 from nltk import pos_tag
 import nltk
+import string
 '''Notes: Possible stemmers: porter, lancaster, snowball, wordnet lemmatization (may require verb/noun POS tagger) all in NLTK - which is best?'''
 
 #Francesca Toni's publications from 2016
@@ -83,8 +84,7 @@ papers4 = [
             "date"    : "2016"}
           ]
 
-punc = ',.:;' #punctuation we want to remove
-connectives = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between'] #boring words to get rid of
+remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
 def build_profiles(papers):
     """Produces a dictionary of name:profile pairs. The profiles are a
@@ -138,6 +138,11 @@ list1 = [(x,get_lemma_pos(y)) for (x,y) in list]
 list2 = [wl2.lemmatize(x,pos=y) for (x,y) in list1]
 print list2'''
 
+'''text="Online Argumentation-Based Platform for Recommending Medical Literature"
+text1 = string.replace(text,'-',' ')
+print(text1)'''
+
+
 
 def split_title(title):
     """Produces a list of keywords from the paper title with
@@ -150,10 +155,11 @@ def split_title(title):
      split_title("ABA+: assumption-based argumentation with preferences")
     ['aba+', 'assumption-based', 'argumentation', 'preferences']
     """
-    text = nltk.word_tokenize(title)                                           #tokenizing the title
-    lowertext = [word.lower() for word in text]                             #converting all words to lowercase
-    taggedwords = nltk.pos_tag(lowertext)                                    #tagging words as verb, noun etc to help lemmatizer
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in connectives] #converts those to format lemmatizer understands
+    text = string.replace(title,'-',' ')                                       #replacing hyphens with spaces
+    tokens = nltk.word_tokenize(text)                                           #tokenizing the title
+    lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
+    taggedwords = nltk.pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
