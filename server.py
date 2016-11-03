@@ -124,6 +124,21 @@ def person_full(person_id):
     else:
         abort(404)
 
+
+@app.route('/api/submit_paper', methods=['POST'])
+def submit_data():
+    if request.is_json:
+        data = request.get_json()
+        try:
+            title = data['title']
+            authors = data['authors']
+            date = data['date']
+        except:
+            return 'paper should have fields: title, authors, date', 415
+    else:
+        return 'JSON, please.', 415
+      
+
 if __name__ == '__main__':
     heroku_port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=heroku_port)
