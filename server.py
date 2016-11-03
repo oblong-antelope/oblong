@@ -5,57 +5,13 @@ from collections import defaultdict
 import json
 import os
 import uuid
+import extract_expertise
 from flask import Flask, request, abort
 from flask_cors import CORS
 
-PEOPLE =\
-        [ { 'name': 'Dr. Tim Timson'
-          , 'department': 'Department of Tim Research'
-          , 'email': 'tim@timresearch.ic.ac.uk'
-          , 'awards':
-            [ 'Tim Medal 2009'
-            , 'Nobel Prize for Tim Research'
-            ]
-          , 'papers':
-            [ 'https://arXiv.org/abs/1024.01232'
-            , 'https://arXiv.org/abs/1024.01233'
-            , 'https://arXiv.org/abs/1024.01234'
-            , 'https://arXiv.org/abs/1024.01235'
-            , 'https://arXiv.org/abs/1024.01236'
-            , 'https://arXiv.org/abs/1024.01237'
-            , 'https://arXiv.org/abs/1024.01238'
-            , 'https://arXiv.org/abs/1024.01239'
-            , 'https://arXiv.org/abs/1024.01240'
-            ]
-          , 'keywords':
-            { 'learning': 2546
-            , 'machine': 1000
-            , 'ai': 1000
-            , 'Tim': 40
-            }
-          }
-        , { 'name': 'Dr. Timothy Timsworth'
-          , 'department': 'Department of Tim Rights'
-          , 'email': 'tim@timrights.ic.ac.uk'
-          , 'awards':
-            [ 'Employee of the month June 2011'
-            , "World's best dad"
-            ]
-          , 'papers':
-            [ 'https://arXiv.org/abs/1024.01232'
-            , 'https://arXiv.org/abs/1024.01233'
-            , 'https://arXiv.org/abs/1024.01234'
-            , 'https://arXiv.org/abs/1024.01235'
-            , 'https://arXiv.org/abs/1024.01236'
-            ]
-          , 'keywords':
-            { 'learning': 2546
-            , 'machine': 1000
-            , 'ai': 1000
-            , 'Tim': 40
-            }
-          }
-        ]
+
+
+PROFILES = {}
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -133,6 +89,8 @@ def submit_data():
             title = data['title']
             authors = data['authors']
             date = data['date']
+            PROFILES = extract_expertise.augment_author(data, PROFILES)
+            
         except:
             return 'paper should have fields: title, authors, date', 415
     else:

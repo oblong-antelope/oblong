@@ -102,6 +102,18 @@ def build_profiles(papers):
             profiles = augment_author(author, profiles, word_list)
     return profiles
 
+def augment_profile(paper, profiles):
+    """Given a single paper, augments the author of that paper.
+
+       paper : a single paper to augment the author of
+       profiles : the dictionary of name:profile pairs to update
+
+       returns : a dictionary of name:profile pairs
+    """
+    word_list = split_title(paper['title'])
+    authors = split_authors(paper['authors'])
+    return augment_author(author, profile, word_list)
+
 def split_authors(authors):
     """Produces a list of strings containing the authors' names.
 
