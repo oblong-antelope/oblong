@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
-#from nltk.stem import *
-#from nltk import pos_tag
+from nltk.stem import *
+from nltk import pos_tag
 import nltk
 import string
+import collections
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
@@ -174,6 +175,9 @@ def augment_author(author, profiles, words):
             author_words[word] = 1
         else:
             author_words[word] += 1
+    x = sorted(profiles[author].items(), key=lambda t: t[1])             #sorting the words from lowest to highest freq in list
+    x.reverse()                                                          #reverse so most frequent at top
+    profiles[author] = collections.OrderedDict(x)                        #storing as ordered dictionary
     return profiles
 
 	
