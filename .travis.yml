@@ -2,9 +2,7 @@ language: python
 python:
   - "3.5"
 
-install: "pip install flask"
-install: "pip install flask_cors"
-install: "pip install nltk"
+install: "pip install -r requirements.txt"
 script: nosetests
 
 notifications:
