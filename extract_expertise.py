@@ -1,10 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
-from nltk.stem import *
-from nltk import pos_tag
+#from nltk.stem import *
+#from nltk import pos_tag
 import nltk
 import string
-'''Notes: Possible stemmers: porter, lancaster, snowball, wordnet lemmatization (may require verb/noun POS tagger) all in NLTK - which is best?'''
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
@@ -40,12 +39,6 @@ papers = [ {"title"   : "Argumentation-based multi-agent decision making with pr
          ]
 
 
-papers2 = [
-           {"title"   : "Making make makes maker made",
-            "authors" : " F. Toni",
-            "date"    : "2016"}
-          ]
-
 papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
             "authors" : "F. Toni",
             "date"    : "2016"},
@@ -78,11 +71,6 @@ papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with p
             "date"    : "2016"}
          ]
 
-papers4 = [
-           {"title"   : "Do you really think it is weakness that yields to temptation? I tell you that there are terrible temptations which it requires strength, strength and courage to yield to",
-            "authors" : " F. Toni",
-            "date"    : "2016"}
-          ]
 
 remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
@@ -143,19 +131,6 @@ def get_lemma_pos(tag):  #needed to for part of speech tagging for lemmatizer
         return 'r'
     else:
         return 'n'
-
-#testing purposes
-'''wl2 = WordNetLemmatizer()
-text=nltk.word_tokenize("Online Argumentation-Based Platform for Recommending Medical Literature")
-text1 = [word.lower() for word in text]
-list1 = [(x,get_lemma_pos(y)) for (x,y) in list]
-list2 = [wl2.lemmatize(x,pos=y) for (x,y) in list1]
-print list2'''
-
-'''text="Online Argumentation-Based Platform for Recommending Medical Literature"
-text1 = string.replace(text,'-',' ')
-print(text1)'''
-
 
 
 def split_title(title):
