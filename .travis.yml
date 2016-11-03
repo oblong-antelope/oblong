@@ -4,6 +4,7 @@ python:
 
 install: "pip install flask"
 install: "pip install flask_cors"
+install: "pip install nltk"
 script: nosetests
 
 notifications:
