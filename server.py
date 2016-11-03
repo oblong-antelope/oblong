@@ -11,7 +11,54 @@ from flask_cors import CORS
 
 
 
-PROFILES = {}
+PROFILES = { \
+            'Dr. Tim Timson' : { 'name': 'Dr. Tim Timson'
+                , 'department': 'Department of Tim Research'
+                , 'email': 'tim@timresearch.ic.ac.uk'
+                , 'awards':
+                    [ 'Tim Medal 2009'
+                    , 'Nobel Prize for Tim Research'
+                    ]
+                , 'papers':
+                    [ 'https://arXiv.org/abs/1024.01232'
+                    , 'https://arXiv.org/abs/1024.01233'
+                    , 'https://arXiv.org/abs/1024.01234'
+                    , 'https://arXiv.org/abs/1024.01235'
+                    , 'https://arXiv.org/abs/1024.01236'
+                    , 'https://arXiv.org/abs/1024.01237'
+                    , 'https://arXiv.org/abs/1024.01238'
+                    , 'https://arXiv.org/abs/1024.01239'
+                    , 'https://arXiv.org/abs/1024.01240'
+                    ]
+                , 'keywords':
+                    { 'learning': 2546
+                    , 'machine': 1000
+                    , 'ai': 1000
+                    , 'Tim': 40
+                    }
+                }
+        , 'Dr. Timonthy Timsworth' : { 'name': 'Dr. Timothy Timsworth'
+                , 'department': 'Department of Tim Rights'
+                , 'email': 'tim@timrights.ic.ac.uk'
+                , 'awards':
+                    [ 'Employee of the month June 2011'
+                    , "World's best dad"
+                    ]
+                , 'papers':
+                    [ 'https://arXiv.org/abs/1024.01232'
+                    , 'https://arXiv.org/abs/1024.01233'
+                    , 'https://arXiv.org/abs/1024.01234'
+                    , 'https://arXiv.org/abs/1024.01235'
+                    , 'https://arXiv.org/abs/1024.01236'
+                    ]
+                , 'keywords':
+                    { 'learning': 2546
+                    , 'machine': 1000
+                    , 'ai': 1000
+                    , 'Tim': 40
+                    }
+                }
+        }
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -19,14 +66,14 @@ queries = {}
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
-    CANNED_RESPONSES =\
-            [ (lambda j: (j['expertise'].lower() == 'artificial intelligence'
-                          and j['role'].lower() == 'supervisor')
-              , [0, 1])
-            , (lambda j: j['expertise'].lower() == 'reinforcement learning'
-              , [1])
+    # CANNED_RESPONSES =\
+    #         [ (lambda j: (j['expertise'].lower() == 'artificial intelligence'
+    #                       and j['role'].lower() == 'supervisor')
+    #           , [0, 1])
+    #         , (lambda j: j['expertise'].lower() == 'reinforcement learning'
+    #           , [1])
 
-            ]
+    #         ]
 
     if request.is_json:
         request_json = defaultdict(lambda: '')
@@ -34,17 +81,26 @@ def submit_query():
     else:
         return 'JSON, please.', 415
     query_id = str(uuid.uuid4())
-    for cond, values in CANNED_RESPONSES:
-        if cond(request_json):
-            resp = []
-            for i in values:
-                resp.append({k: PEOPLE[i][k] for k in
-                             ('name', 'email', 'department')})
-                person = '/api/person/{}/'.format(i)
-                resp[-1]['research_summary'] = person + 'summary'
-                resp[-1]['full_profile'] = person + 'full'
-            queries[query_id] = resp
-            break
+
+    name = request_json['name']
+
+    profile = PROFILES[name]
+    
+    person = '/api/person/{}/'.format(name)
+    profile['research_summary'] = person + 'summary'
+    profile['full_profile'] = person + 'full'
+
+    queries[query_id] = [profile]
+    
+    # for cond, values in CANNED_RESPONSES:
+    #     if cond(request_json):
+    #         resp = []
+    #         for i in values:
+    #             resp.append({k: PROFILES[i][k] for k in
+    #                          ('name', 'email', 'department')})
+    #             person = '/api/person/{}/'.format(i)
+    #         queries[query_id] = resp
+    #         break
     if query_id not in queries:
         queries[query_id] = []
     response = {
@@ -60,10 +116,11 @@ def get_query(query_id):
     else:
         abort(404)
 
-@app.route('/api/person/<int:person_id>/summary')
+@app.route('/api/person/<person_id>/summary')
 def person_summary(person_id):
-    if 0 <= person_id < len(PEOPLE):
-        person = PEOPLE[person_id]
+    if person_id in PROFILES:
+    # if 0 <= person_id < len(queries):
+        person = PROFILES[person_id]
         resp = { 'papers': len(person['papers'])
                , 'keywords': sorted(list(person['keywords'].keys()))
                , 'recent_paper': person['papers'][0]
@@ -73,10 +130,11 @@ def person_summary(person_id):
     else:
         abort(404)
 
-@app.route('/api/person/<int:person_id>/full')
+@app.route('/api/person/<person_id>/full')
 def person_full(person_id):
-    if 0 <= person_id < len(PEOPLE):
-        return json.dumps(PEOPLE[person_id])
+    if person_id in PROFILES:
+    # if 0 <= person_id < len(queries):
+        return json.dumps(PROFILES[person_id])
     else:
         abort(404)
 
@@ -89,7 +147,7 @@ def submit_data():
             title = data['title']
             authors = data['authors']
             date = data['date']
-            PROFILES = extract_expertise.augment_author(data, PROFILES)
+            PROFILES = extract_expertise.augment_profile(data, PROFILES)
             
         except:
             return 'paper should have fields: title, authors, date', 415
