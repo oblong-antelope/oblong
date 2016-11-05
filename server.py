@@ -64,7 +64,7 @@ PROFILES = { \
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-config = {}
+cfg = {}
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
@@ -89,6 +89,6 @@ def submit_data():
       
 
 if __name__ == '__main__':
-    config = config.get_server_config()
+    cfg = config.get_server_config()
     heroku_port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=heroku_port)
