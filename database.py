@@ -1,5 +1,4 @@
 import pg
-
 import os
 import config
 import urllib.parse as urlparse
@@ -8,7 +7,7 @@ urlparse.uses_netloc.append("postgres")
 url = urlparse.urlparse(os.environ["DATABASE_URL"])
 
 class DBm:
-    
+
     _create_table = "CREATE TABLE"
     _primary_key = "PRIMARY KEY"
     _from = "FROM"
@@ -17,7 +16,7 @@ class DBm:
     _select = "SELECT"
     _insert_into = "INSERT INTO"
     _values = "VALUES"
-    _update = "UPDATE"
+    _update_str = "UPDATE"
     _set = "SET"
     _empty = ""
     _space = " "
@@ -35,7 +34,7 @@ class DBm:
     _format_9 = "%s%s%s%s%s%s%s%s%s"
     _format_15 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 
-    def __init__(self):
+    def __init__(self, dbname, host, port, user, passwd):
         self._database = pg.connect(
     		dbname=url.path[1:],
     		user=url.username,
@@ -43,11 +42,11 @@ class DBm:
     		host=url.hostname,
     		port=url.port)
 
-        self.dbname = url.path[1:]
-        self.host = url.hostname
-        self.port = url.port
-        self.user = url.username
-        self.passwd = url.password
+        self.dbname = dbname
+        self.host = host
+        self.port = port
+        self.user = user
+        self.passwd = passwd
         self.isOpen = True
 
     def close(self, query):
@@ -121,6 +120,8 @@ class DBm:
         
     def _where_cond(self, conds):
         l = len(conds)
+        if (l == 0):
+            return DBm._empty
         cmd = DBm._where
         count = 0
         for cond in conds:
@@ -139,6 +140,8 @@ class DBm:
         
     def _gen_list(self, cols):
         l = len(cols)
+        if (l == 0):
+            return DBm._empty
         cmd = DBm._empty
         count = 0
         for col in cols:
@@ -158,7 +161,7 @@ class DBm:
     def search(self, conds):
         """conds is a list of strings, denotes the conds for filter
         format: attribut=value, attribute>value etc.
-            e.g. ["name = \"john\"", "age > 36"]
+            e.g. ["name = \'john\'", "age > 36"]
         returns a list of dictionaries, each one is a row in the
         database"""
         cmd = DBm._format_9 % (DBm._select,
@@ -222,9 +225,9 @@ class DBm:
     def update(self, cols_values, conds):
         """cols_values is a list of pairs of strings
         format: (attribute, value)
-           e.g. [("name", "\"john\""), ("age", "30")]
+           e.g. [("name", "\'john\'"), ("age", "30")]
         conds is the same as in search"""
-        cmd = DBm._format_9 % (DBm._update,
+        cmd = DBm._format_9 % (DBm._update_str,
                                DBm._space,
                                self.tname,
                                DBm._space,
