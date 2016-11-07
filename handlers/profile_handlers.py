@@ -7,7 +7,7 @@ import functools
 import editdistance
 import pylru
 from flask import request, abort
-import database_handlers as dh
+import handlers.database_handlers as dh
 #import extract_expertise
 
 QUERIES = pylru.lrucache(100)
