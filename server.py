@@ -18,6 +18,19 @@ cfg = {}
 database = DBm()
 #database.create_table("profile_db", [("name","text"),("id","integer"),("keywords","text")], ["name"])
 
+@app.route('/lol', methods=['GET'])
+def submit_query():
+    db.create_table("table2", [("names", "text"), ("year", "integer")], ["names"])
+    db.insert(["\'John\'", "24"])
+    db.update([("year", "22")], ["names=\'John\'"])
+    db.insert(["\'e\'", "24"])
+    db.insert(["\'b\'", "24"])
+    db.insert(["\'c\'", "24"])
+    db.insert(["\'d\'", "24"])
+    d = db.search(["names!=\'e\'", "year > 23"])
+    print(d)
+    return d
+
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
     return profile_handlers.submit_query()
