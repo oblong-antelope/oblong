@@ -69,4 +69,4 @@ def _convert_query_for_search(query):
     """
     #return ["{0} = \"{1}\"".format(key, value) for key, value in query.items()]
     #TODO - For now just return query of names, nothing else will work
-    return "name = \'{}\'".format(query["name"])
+    return ["name = \'{}\'".format(query["name"])]
