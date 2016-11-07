@@ -5,6 +5,7 @@ from nltk import pos_tag
 import nltk
 import string
 import collections
+import utils
 from handlers import database_handlers as dbh
 
 #Francesca Toni's publications from 2016
@@ -133,10 +134,16 @@ def split_title(title):
        Returns:
            list2 (list): a list of keywords
     """
-    text = title.replace('-',' ')                                       #replacing hyphens with spaces
-    tokens = nltk.word_tokenize(text)                                           #tokenizing the title
-    lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
-    taggedwords = nltk.pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
+    text = title.replace('-',' ') #replacing hyphens with spaces
+    while true:
+        try:
+            tokens = nltk.word_tokenize(text)               #tokenizing the title
+            lowertokens = [word.lower() for word in tokens] #converting all words to lowercase
+            taggedwords = nltk.pos_tag(lowertokens)         #tagging words as verb, noun etc to help lemmatizer
+            break
+        except LookupError as e:
+            utils.install_nltk()                            #if nltk is not installed
+
     list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in open('stopwordslong.txt').read()] #converts those to format lemmatizer understands and removes boring words
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
