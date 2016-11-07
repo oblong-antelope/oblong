@@ -1,4 +1,7 @@
+import pg
+
 import os
+import config
 import psycopg2
 import urllib.parse as urlparse
 
@@ -6,7 +9,7 @@ urlparse.uses_netloc.append("postgres")
 url = urlparse.urlparse(os.environ["DATABASE_URL"])
 
 class DBm:
-
+    
     _create_table = "CREATE TABLE"
     _primary_key = "PRIMARY KEY"
     _from = "FROM"
