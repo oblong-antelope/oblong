@@ -1,4 +1,4 @@
-#aa!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 '''Webserver to handle the back end of Oblong.'''
 from collections import defaultdict
@@ -15,21 +15,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 cfg = {}
-db = DBm()
+database = DBm()
 #database.create_table("profile_db", [("name","text"),("id","integer"),("keywords","text")], ["name"])
-
-@app.route('/api/query/lol', methods=['GET'])
-def su():
-    db.create_table("table2", [("names", "text"), ("year", "integer")], ["names"])
-    db.insert(["\'John\'", "24"])
-    db.update([("year", "22")], ["names=\'John\'"])
-    db.insert(["\'e\'", "24"])
-    db.insert(["\'b\'", "24"])
-    db.insert(["\'c\'", "24"])
-    db.insert(["\'d\'", "24"])
-    d = db.search(["names!=\'e\'", "year > 23"])
-    print(d)
-    return d
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
