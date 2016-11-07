@@ -28,8 +28,9 @@ def submit_query():
         return 'JSON, please.', 415
 
     # get profiles from data
+    print(request_json)
     (profiles, status) = dh.find_profiles(request_json)
-
+    
     if not status:
         # failed to find anything
         response = {'success': status, 'results': ''}
