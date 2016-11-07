@@ -1,4 +1,5 @@
 import uuid
+from database import DBm
 from server import db
 
 PROFILE_T_NAME = "profile_db"
@@ -8,7 +9,9 @@ TEXT = "text"
 INTEGER = "integer"
 
 def initalise():
+    db = DBm()
     db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
+    return db
 
 
 def add_new_profile(profile):
