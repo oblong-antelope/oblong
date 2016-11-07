@@ -2,7 +2,6 @@ import pg
 
 import os
 import config
-import psycopg2
 import urllib.parse as urlparse
 
 urlparse.uses_netloc.append("postgres")
@@ -37,7 +36,7 @@ class DBm:
     _format_15 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 
     def __init__(self):
-        self._database = psycopg2.connect(
+        self._database = pg.connect(
     		database=url.path[1:],
     		user=url.username,
     		password=url.password,
