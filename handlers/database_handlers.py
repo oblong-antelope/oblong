@@ -9,14 +9,13 @@ PROFILE_T_NAME = "profile_db"
 PROFILE_T_COLUMNS = [("name",TEXT),("id",INTEGER),("keywords",TEXT)]
 PROFILE_T_P_KEY =  ["name"]
 
-db = {}
+db = DBm()
 
-def generate_database():
+def initialise():
     """Creates a new Postgresql database with a new table
 
         returns : the database generated
     """
-    db = DBm()
     db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
 
 
