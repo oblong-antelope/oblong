@@ -16,6 +16,7 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 cfg = {}
 database = DBm()
+database.create_table('profile db', [('name','text'),('id','integer'),('keywords','text')])
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():

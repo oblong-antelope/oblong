@@ -5,7 +5,7 @@ from nltk import pos_tag
 import nltk
 import string
 import collections
-import database_handlers as dbh
+import handlers.database_handlers as dbh
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
