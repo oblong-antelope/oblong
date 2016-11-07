@@ -15,10 +15,10 @@ from flask_cors import CORS
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 cfg = {}
-database = DBm()
+db = DBm()
 #database.create_table("profile_db", [("name","text"),("id","integer"),("keywords","text")], ["name"])
 
-@app.route('/lol', methods=['GET'])
+@app.route('/api/query/lol', methods=['GET'])
 def submit_query():
     db.create_table("table2", [("names", "text"), ("year", "integer")], ["names"])
     db.insert(["\'John\'", "24"])
