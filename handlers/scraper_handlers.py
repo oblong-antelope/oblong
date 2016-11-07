@@ -21,7 +21,7 @@ def submit_data():
 
 def scrape_symplectic():
     #gather data from symplectic using the APIs, returns canned Toni responses atm.
-    for paper in papers:
+    for paper in ee.papers:
         ee.augment_profile(paper)
-    for paper in papers3:
+    for paper in ee.papers3:
         ee.augment_profile(paper)

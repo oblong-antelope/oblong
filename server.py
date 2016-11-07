@@ -21,6 +21,9 @@ cfg = config.get_server_config()
 # Init the database
 database_handlers.initialise()
 
+# TODO WHILE THE SCRAPER IS NOT IN, USE THE CANNED responses
+scraper_handlers.scrape_symplectic()
+
 # ------------ PROFILE API ROUTES -----------------
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
