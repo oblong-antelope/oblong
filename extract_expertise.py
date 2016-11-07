@@ -186,6 +186,15 @@ def find_author_profile(author, profiles):
 def weighting(word, words, date):
     """A weighting function based on words and date.
 
+       The function used currently is linear deprecation up
+       to a time gap of fifty years.
+
+       Parameters:
+           FUNC : function to produce weight given time diff
+           CUTOFF : cutoff for gradual weighting
+           BASE : lowest weighting. time_diffs after the CUTOFF
+                  get this weight by default
+
        Args:
            word (string): the word we're weighting
            words (list): other words in the title
@@ -195,8 +204,14 @@ def weighting(word, words, date):
            weighting (int): a weighted number representing 
                how important this occurence of the word is
     """
-    #TODO: write an appropriate weighting function
-    weighting = 1
+    FUNC = (lambda d: -0.09*d + 5)
+    CUTOFF = 50
+    BASE = 0.5
+    import time
+    year = int(date[:4])
+    current_year = time.gmtime()[0]
+    time_diff = current_year - year
+    weighting = FUNC(time_diff) if time_diff <= CUTOFF else BASE
     return weighting
 
 	
