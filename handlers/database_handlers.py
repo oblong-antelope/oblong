@@ -35,7 +35,7 @@ def find_profiles(query):
     """
     conv = _convert_query_for_search(query)
     print(conv)
-    reponse = db.search(conv)
+    response = db.search(conv)
     if len(response) == 0:
         return (None, False)
     return (response, True)
