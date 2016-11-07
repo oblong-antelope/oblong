@@ -9,6 +9,10 @@ TEXT = "text"
 INTEGER = "integer"
 
 def generate_database():
+    """Creates a new Postgresql database with a new table
+
+        returns : the database generated
+    """
     database = DBm()
     database.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
     return database

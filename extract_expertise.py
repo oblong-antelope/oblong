@@ -5,7 +5,7 @@ from nltk import pos_tag
 import nltk
 import string
 import collections
-import handlers.database_handlers as dbh
+from handlers import database_handlers as dbh
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
@@ -81,7 +81,7 @@ def augment_profiles(paper):
 
        Creates or refines the profiles of all authors of the paper
        in the profile database.
-       
+
        Args:
            paper (dict): a single paper of which to augment the author
               the paper will be of the format:
@@ -97,7 +97,7 @@ def augment_profiles(paper):
 
 def split_authors(authors):
     """Produces a list of strings containing the authors' names.
-       
+
        Args:
            authors (string): the authors' names
 
@@ -144,7 +144,7 @@ def split_title(title):
 
 def augment_author(author, words, date):
     """Augments the author profiles given words
-    
+
        Given a dict of an author name and a list of words
        increase the word counts for the given author appropriately
 
@@ -174,7 +174,7 @@ def find_author_profile(author, profiles):
        Args:
            author (string): author name to find
            profiles (list): list of profiles to search
-       
+
        Returns:
            p (dict): a dictionary representing an author profile
     """
@@ -201,7 +201,7 @@ def weighting(word, words, date):
            date (string): date the paper was written
 
        Returns:
-           weighting (int): a weighted number representing 
+           weighting (int): a weighted number representing
                how important this occurence of the word is
     """
     FUNC = (lambda d: -0.09*d + 5)
@@ -214,7 +214,7 @@ def weighting(word, words, date):
     weighting = FUNC(time_diff) if time_diff <= CUTOFF else BASE
     return weighting
 
-	
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
