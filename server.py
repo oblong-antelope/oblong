@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#a!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 '''Webserver to handle the back end of Oblong.'''
 from collections import defaultdict
