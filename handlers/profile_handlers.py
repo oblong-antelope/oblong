@@ -77,7 +77,7 @@ def person_summary(person_id):
        returns : json of a summary of the person_id
                  contains - papers, keywords, recent_paper, full_profile
     """
-    (person, status) = dh.get_profile(person_id)
+    (person, status) = dh.get_profile_by_id(person_id)
     if status:
         resp = { 'papers': len(person['papers'])
                , 'keywords': sorted(list(person['keywords'].keys()))
@@ -95,13 +95,13 @@ def person_full(person_id):
        
        returns : json containing the entire profile
     """
-    (person, status) = dh.get_profile(person_id)
+    (person, status) = dh.get_profile_by_id(person_id)
     if status:
         return json.dumps(PROFILES[person_id])
     else:
         abort(404)
 
-        
+
 def _get_ordered_results(profiles, name, field):
     """Gets an ordered list of query results.
 
