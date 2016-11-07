@@ -76,7 +76,7 @@ papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with p
 
 remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
-def augment_profiles(paper):
+def augment_profile(paper):
     """Given a single paper, augments the author of that paper.
 
        Creates or refines the profiles of all authors of the paper
