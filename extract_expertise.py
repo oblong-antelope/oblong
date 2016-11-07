@@ -142,7 +142,7 @@ def split_title(title):
             taggedwords = nltk.pos_tag(lowertokens)         #tagging words as verb, noun etc to help lemmatizer
             break
         except LookupError as e:
-            utils.install_nltk()                            #if nltk is not installed
+            nltk.download()                                #if nltk is not installed
 
     list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in open('stopwordslong.txt').read()] #converts those to format lemmatizer understands and removes boring words
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
