@@ -135,7 +135,7 @@ def split_title(title):
            list2 (list): a list of keywords
     """
     text = title.replace('-',' ') #replacing hyphens with spaces
-    while true:
+    while True:
         try:
             tokens = nltk.word_tokenize(text)               #tokenizing the title
             lowertokens = [word.lower() for word in tokens] #converting all words to lowercase
