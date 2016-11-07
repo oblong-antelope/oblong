@@ -79,19 +79,30 @@ remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based
 def augment_profiles(paper):
     """Given a single paper, augments the author of that paper.
 
-       paper : a single paper to augment the author of
+       Creates or refines the profiles of all authors of the paper
+       in the profile database.
+       
+       Args:
+           paper (dict): a single paper of which to augment the author
+              the paper will be of the format:
+                 {'authors':['Toni F.'],
+                  'title':'Paper title',
+                  'date':'2016-11-27T14:27:34.35+00:00'}
     """
     word_list = split_title(paper['title'])
-    authors = split_authors(paper['authors'])
+    authors = paper['authors']
+    date = paper['date']
     for author in authors:
-        augment_author(author, word_list)
+        augment_author(author, word_list, date)
 
 def split_authors(authors):
     """Produces a list of strings containing the authors' names.
+       
+       Args:
+           authors (string): the authors' names
 
-    authors : a string containing an author list
-
-    returns : a list of author names
+       Returns:
+           author_list (list): a list of author names
     """
     split = authors.split(', ')
     author_list = split[:-1]
@@ -116,9 +127,11 @@ def split_title(title):
     """Produces a list of keywords from the paper title with
        boring words removed.
 
-       title : a title to analyse
+       Args:
+          title (string): a title to analyse
 
-       returns : a list of keywords
+       Returns:
+           list2 (list): a list of keywords
     """
     text = string.replace(title,'-',' ')                                       #replacing hyphens with spaces
     tokens = nltk.word_tokenize(text)                                           #tokenizing the title
@@ -129,12 +142,16 @@ def split_title(title):
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
 
-def augment_author(author, words):
-    """Given a dict of an author name and a list of words
+def augment_author(author, words, date):
+    """Augments the author profiles given words
+    
+       Given a dict of an author name and a list of words
        increase the word counts for the given author appropriately
 
-       author : author name to augment
-       words : a list of words
+       Args:
+           author (string): author name to augment
+           words (list): a list of words
+           date (string): date paper was written
     """
     profiles = dbh.find_profiles({'name':author})[0] #find profiles
     if profiles == []:
@@ -144,18 +161,43 @@ def augment_author(author, words):
         author_profile = eval(find_author_profile(author, profiles)) #find first author of given name
         author_words = author_profile['keywords'] #find author's keywords
         if word not in author_words:
-            author_words[word] = 1 #add new word
+            author_words[word] = weighting(words, date) #add new word
         else:
-            author_words[word] += 1 #augment old word
+            author_words[word] += weighting(words, date) #augment old word
     x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
     dbh.update_profile(author_profile['id'], author_profile) #update row in db
 
 def find_author_profile(author, profiles):
+    """Finds a given author in a profile list
+
+       Args:
+           author (string): author name to find
+           profiles (list): list of profiles to search
+       
+       Returns:
+           p (dict): a dictionary representing an author profile
+    """
     for p in profiles:
         if p['name'] == author:
             return p
     return {}
+
+def weighting(word, words, date):
+    """A weighting function based on words and date.
+
+       Args:
+           word (string): the word we're weighting
+           words (list): other words in the title
+           date (string): date the paper was written
+
+       Returns:
+           weighting (int): a weighted number representing 
+               how important this occurence of the word is
+    """
+    #TODO: write an appropriate weighting function
+    weighting = 1
+    return weighting
 
 	
 if __name__ == "__main__":
