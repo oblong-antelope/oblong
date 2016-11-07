@@ -1,5 +1,5 @@
 import uuid
-from server import database as db
+from server import db
 
 
 def add_new_profile(profile):
