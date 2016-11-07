@@ -3,6 +3,7 @@
 '''Profile Api handlers.'''#
 import json
 import uuid
+from collections import defaultdict
 import functools
 import editdistance
 import pylru
