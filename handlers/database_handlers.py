@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
 import uuid
 from database import DBm
-# from server import db
 
 TEXT = "text"
 INTEGER = "integer"
@@ -12,12 +13,12 @@ PROFILE_T_P_KEY =  ["name"]
 db = DBm()
 
 def initialise():
-    """Creates a new Postgresql database with a new table
+    """Creates a new Postgresql database
+       Generates the tables required for the database
 
-        returns : the database generated
+       returns : the database generated
     """
     db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
-
 
 def add_new_profile(profile):
     """Inserts a single profile int into the database
@@ -32,7 +33,7 @@ def add_new_profile(profile):
 def get_profile_by_id(uid):
     """Queries the database by uid
 
-       uid : uid of the profile to be FileNotFoundError
+       uid : uid of the profile to be found
 
        return: tuple of profile belonging to the uid and a success flag
                flag is false if no profile is found of that uid

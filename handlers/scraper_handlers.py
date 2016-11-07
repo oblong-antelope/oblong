@@ -8,12 +8,12 @@ from flask import request, abort
 
 def submit_data():
     if request.is_json:
-        data = request.get_json()
+        paper = request.get_json()
         try:
-            title = data['title']
-            authors = data['authors']
-            date = data['date']
-            ee.augment_profile(data)
+            title = paper['title']
+            authors = paper['authors']
+            date = paper['date']
+            ee.augment_profile(paper)
         except:
             return 'paper should have fields: title, authors, date', 415
     else:
