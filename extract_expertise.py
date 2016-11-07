@@ -137,7 +137,7 @@ def split_title(title):
     tokens = nltk.word_tokenize(text)                                           #tokenizing the title
     lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
     taggedwords = nltk.pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in open('stopwordslong.txt').read()] #converts those to format lemmatizer understands and removes boring words
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
@@ -150,7 +150,7 @@ def augment_author(author, words, date):
 
        Args:
            author (string): author name to augment
-           words (list): a list of words
+           words (list): a list of wordds
            date (string): date paper was written
     """
     profiles = dbh.find_profiles({'name':author})[0] #find profiles
