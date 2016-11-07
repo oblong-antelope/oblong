@@ -20,7 +20,7 @@ def get_profile_by_id(uid):
        return: tuple of profile belonging to the uid and a success flag
                flag is false if no profile is found of that uid
     """
-    query = ["id = \"{}\"".format(uid)]
+    query = ["id = \'{}\'".format(uid)]
     response = db.search(query)
     if len(response) == 0:
         return (None, False)
@@ -47,7 +47,7 @@ def update_profile(uid, new_vals):
        new_vals : dictionary of new profile
     """
     cols_values = [(k,v) for k,v in new_vals.items()]
-    conds = ["id = \"{}\"".format(uid)]
+    conds = ["id = \'{}\'".format(uid)]
     db.update(cols_values, conds)
 
 
@@ -69,4 +69,4 @@ def _convert_query_for_search(query):
     """
     #return ["{0} = \"{1}\"".format(key, value) for key, value in query.items()]
     #TODO - For now just return query of names, nothing else will work
-    return "name = \"{}\"".format(query["name"])
+    return "name = \'{}\'".format(query["name"])
