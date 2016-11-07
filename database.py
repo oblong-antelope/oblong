@@ -35,7 +35,7 @@ class DBm:
     _format_9 = "%s%s%s%s%s%s%s%s%s"
     _format_15 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 
-    def __init__(self, dbname, host, port, user, passwd):
+    def __init__(self):
         self._database = pg.connect(
     		dbname=url.path[1:],
     		user=url.username,
@@ -43,11 +43,11 @@ class DBm:
     		host=url.hostname,
     		port=url.port)
 
-        self.dbname = dbname
-        self.host = host
-        self.port = port
-        self.user = user
-        self.passwd = passwd
+        self.dbname = url.path[1:]
+        self.host = url.hostname
+        self.port = url.port
+        self.user = url.username
+        self.passwd = url.password
         self.isOpen = True
 
     def close(self, query):
