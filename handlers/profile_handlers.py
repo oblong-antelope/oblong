@@ -3,7 +3,9 @@
 '''Profile Api handlers.'''#
 import json
 import uuid
-import extract_expertise
+#import extract_expertise
+import functools
+import editdistance
 from flask import request, abort
 
 PROFILES = {}
@@ -30,9 +32,15 @@ def submit_query():
 
     name = request_json['name']
 
-    profile = PROFILES[name]
-    
     person = '/api/person/{}/'.format(name)
+
+    try: #inside try block for the moment, i'm not sure if field is provided by the js
+        field = request_json['field'] #field of research
+        results = get_ordered_results(PROFILES, name, field)
+        profile = results[0]
+    except:
+        profile = PROFILES[name]
+
     profile['research_summary'] = person + 'summary'
     profile['full_profile'] = person + 'full'
 
@@ -80,3 +88,36 @@ def person_full(person_id):
         return json.dumps(PROFILES[person_id])
     else:
         abort(404)
+
+def get_ordered_results(profiles, name, field):
+    """Gets an ordered list of query results.
+
+       profiles: the profile list to sort
+       name: query name
+       field: query field
+
+       returns: an ordered list of query results
+    """
+    results = profiles.values() #extract profiles
+    rank = functools.partial(get_rank, name=name, field=field) #partially apply ranking function to query
+    return sorted(results, key=rank, reverse=True) #sort profiles
+
+def get_rank(name, field, profile, name_weight=100):
+    """Ranking function that gives a profile a rank on how well
+       it matches a given query. Uses Levenshtein distance to compare
+       name to query name.
+
+       name: query name
+       field: query field
+       profile: profile to rank
+       name_weight: scaling factor for the name comparison (100 for the moment)
+
+       returns: an int value that represents how well a profile
+                matches the query
+    """
+    name_rank = 0 if name == '' else -name_weight*editdistance.eval(name, profile['name'])
+    try:
+        field_rank = profile['keywords'][field]
+    except:
+        field_rank = 0
+    return field_rank + name_rank

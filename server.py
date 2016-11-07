@@ -7,6 +7,7 @@ import os
 import uuid
 import extract_expertise
 import config
+from database import DBm
 from handlers import profile_handlers, scraper_handlers
 from flask import Flask, request, abort
 from flask_cors import CORS
@@ -37,6 +38,8 @@ def submit_data():
       
 
 if __name__ == '__main__':
+    database = DBm()
     cfg = config.get_server_config()
     heroku_port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=heroku_port)
+    
