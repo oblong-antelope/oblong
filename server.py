@@ -7,7 +7,6 @@ import os
 import uuid
 import extract_expertise
 import config
-from database import DBm
 from handlers import profile_handlers, scraper_handlers, database_handlers
 from flask import Flask, request, abort
 from flask_cors import CORS
@@ -15,7 +14,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 cfg = {}
-db = database_handlers.initalise()
+db = database_handlers.generate_database()
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():

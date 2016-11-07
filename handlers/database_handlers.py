@@ -8,10 +8,10 @@ PROFILE_T_P_KEY =  ["name"]
 TEXT = "text"
 INTEGER = "integer"
 
-def initalise():
-    db = DBm()
-    db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
-    return db
+def generate_database():
+    database = DBm()
+    database.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
+    return database
 
 
 def add_new_profile(profile):
