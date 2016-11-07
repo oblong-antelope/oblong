@@ -17,6 +17,7 @@ class DBm:
     _insert_into = "INSERT INTO"
     _values = "VALUES"
     _update_str = "UPDATE"
+    _drop_table = "DROP TABLE"
     _set = "SET"
     _empty = ""
     _space = " "
@@ -34,7 +35,7 @@ class DBm:
     _format_9 = "%s%s%s%s%s%s%s%s%s"
     _format_15 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 
-    def __init__(self):
+    def __init__(self, dbname, host, port, user, passwd):
         self._database = pg.connect(
     		dbname=url.path[1:],
     		user=url.username,
@@ -42,11 +43,11 @@ class DBm:
     		host=url.hostname,
     		port=url.port)
 
-        self.dbname = url.path[1:]
-        self.host = url.hostname
-        self.port = url.port
-        self.user = url.username
-        self.passwd = url.password
+        self.dbname = dbname
+        self.host = host
+        self.port = port
+        self.user = user
+        self.passwd = passwd
         self.isOpen = True
 
     def close(self, query):
@@ -60,6 +61,7 @@ class DBm:
         self._database.query(query)
 
     def create_table(self, name, cols, primary=[]):
+        self.remove_table(name)
         """name is a string name of the table
         cols is a list of pairs of strings (attribute, type)
             e.g. [("name", "text"), ("age", "integer")]
@@ -237,6 +239,14 @@ class DBm:
                                self._where_cond(conds),
                                DBm._semi_colon)
         self._update(cmd)
+        
+    def remove_table(self, name):
+        self._update(DBm._format_4 % (DBm._drop_table,
+                                      DBm._space,
+                                      name,
+                                      DBm._semi_colon))
+        
+    
 
 
     
