@@ -42,11 +42,11 @@ class DBm:
     		host=url.hostname,
     		port=url.port)
 
-        self.dbname = dbname
-        self.host = host
-        self.port = port
-        self.user = user
-        self.passwd = passwd
+        self.dbname = url.path[1:]
+        self.host = url.hostname
+        self.port = url.port
+        self.user = url.username
+        self.passwd = url.password
         self.isOpen = True
 
     def close(self, query):
