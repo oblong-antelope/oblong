@@ -1,21 +1,21 @@
 import uuid
 from database import DBm
-from server import db
+# from server import db
 
 PROFILE_T_NAME = "profile_db"
 PROFILE_T_COLUMNS = [("name",TEXT),("id",INTEGER),("keywords",TEXT)]
 PROFILE_T_P_KEY =  ["name"]
 TEXT = "text"
 INTEGER = "integer"
+db = {}
 
 def generate_database():
     """Creates a new Postgresql database with a new table
 
         returns : the database generated
     """
-    database = DBm()
-    database.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
-    return database
+    db = DBm()
+    db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
 
 
 def add_new_profile(profile):
