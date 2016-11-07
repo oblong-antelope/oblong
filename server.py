@@ -19,7 +19,7 @@ db = DBm()
 #database.create_table("profile_db", [("name","text"),("id","integer"),("keywords","text")], ["name"])
 
 @app.route('/api/query/lol', methods=['GET'])
-def submit_query():
+def su():
     db.create_table("table2", [("names", "text"), ("year", "integer")], ["names"])
     db.insert(["\'John\'", "24"])
     db.update([("year", "22")], ["names=\'John\'"])
