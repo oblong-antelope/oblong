@@ -34,6 +34,7 @@ def find_profiles(query):
                  flag is false if no matches are found.
     """
     conv = _convert_query_for_search(query)
+    print(conv)
     reponse = db.search(conv)
     if len(response) == 0:
         return (None, False)
