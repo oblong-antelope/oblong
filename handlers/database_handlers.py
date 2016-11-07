@@ -2,11 +2,13 @@ import uuid
 from database import DBm
 # from server import db
 
+TEXT = "text"
+INTEGER = "integer"
+
 PROFILE_T_NAME = "profile_db"
 PROFILE_T_COLUMNS = [("name",TEXT),("id",INTEGER),("keywords",TEXT)]
 PROFILE_T_P_KEY =  ["name"]
-TEXT = "text"
-INTEGER = "integer"
+
 db = {}
 
 def generate_database():
