@@ -3,7 +3,7 @@
 '''Scraper Api handlers.'''#
 import json
 import uuid
-import extract_expertise
+import extract_expertise as ee
 from flask import request, abort
 
 def submit_data():
@@ -13,16 +13,15 @@ def submit_data():
             title = data['title']
             authors = data['authors']
             date = data['date']
-            PROFILES = extract_expertise.augment_profile(data, PROFILES)
-            
+            ee.augment_profile(data)
         except:
             return 'paper should have fields: title, authors, date', 415
     else:
         return 'JSON, please.', 415
-      
+
 def scrape_symplectic():
     #gather data from symplectic using the APIs, returns canned Toni responses atm.
     for paper in papers:
-        extract_expertise.augment_profile(paper)
+        ee.augment_profile(paper)
     for paper in papers3:
-        extract_expertise.augment_profile(paper)
+        ee.augment_profile(paper)

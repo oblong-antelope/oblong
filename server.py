@@ -8,7 +8,7 @@ import uuid
 import extract_expertise
 import config
 from database import DBm
-from handlers import profile_handlers, scraper_handlers
+from handlers import profile_handlers, scraper_handlers, database_handlers
 from flask import Flask, request, abort
 from flask_cors import CORS
 
@@ -16,7 +16,7 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 cfg = {}
 db = DBm()
-db.create_table("profile_db", [("name","text"),("id","integer"),("keywords","text")], ["name"])
+database_handlers.initalise()
 
 @app.route('/api/query/submit', methods=['POST'])
 def submit_query():
@@ -37,10 +37,9 @@ def person_full(person_id):
 @app.route('/api/submit_paper', methods=['POST'])
 def submit_data():
     return scraper_handlers.submit_data()
-      
+
 
 if __name__ == '__main__':
     cfg = config.get_server_config()
     heroku_port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=heroku_port)
-    

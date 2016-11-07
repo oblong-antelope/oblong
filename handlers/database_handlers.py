@@ -1,6 +1,15 @@
 import uuid
 from server import db
 
+PROFILE_T_NAME = "profile_db"
+PROFILE_T_COLUMNS = [("name",TEXT),("id",INTEGER),("keywords",TEXT)]
+PROFILE_T_P_KEY =  ["name"]
+TEXT = "text"
+INTEGER = "integer"
+
+def initalise():
+    db.create_table(PROFILE_T_NAME, PROFILE_T_COLUMNS, PROFILE_T_P_KEY)
+
 
 def add_new_profile(profile):
     """Inserts a single profile int into the database
@@ -20,7 +29,7 @@ def get_profile_by_id(uid):
        return: tuple of profile belonging to the uid and a success flag
                flag is false if no profile is found of that uid
     """
-    query = ["id = \'{}\'".format(uid)]
+    query = _convert_id_query(uid)
     response = db.search(query)
     if len(response) == 0:
         return (None, False)
@@ -28,7 +37,10 @@ def get_profile_by_id(uid):
 
 
 def find_profiles(query):
-    """Queries the database
+    """Queries the database TODO implement other finds
+
+        query : a python dictionary of the format below, which gives the query:
+                {'name':string, 'expertise':[string], 'role':string}
 
        returns : tuple of list of profile dictionaries and a success flag
                  flag is false if no matches are found.
@@ -46,8 +58,8 @@ def update_profile(uid, new_vals):
        uid : uid of entry to update
        new_vals : dictionary of new profile
     """
-    cols_values = [(k,v) for k,v in new_vals.items()]
-    conds = ["id = \'{}\'".format(uid)]
+    cols_values = _convert_for_update(new_vals)
+    conds = _convert_id_query(uid)
     db.update(cols_values, conds)
 
 
@@ -59,6 +71,24 @@ def _convert_for_insert(profile):
         returns : a list of strings of the values in the profile
     """
     return [ str(value) for _, value in profile.items()]
+
+def _convert_for_update(vals):
+    """Converts a dictionary of new values into tuples
+
+        vals : the values dictionary to be converted
+
+        returns : a list of tuples of the values in vals
+    """
+    return [(k,v) for k,v in new_vals.items()]
+
+def _convert_id_query(uid):
+    """Converts a uid query into query format
+
+        uid : the id to be converted
+
+        returns : a singleton list containing the id query
+    """
+    return ["id = \'{}\'".format(uid)]
 
 def _convert_query_for_search(query):
     """Converts a query dictionary into database search format
