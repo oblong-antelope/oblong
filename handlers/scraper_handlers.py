@@ -20,3 +20,9 @@ def submit_data():
     else:
         return 'JSON, please.', 415
       
+def scrape_symplectic():
+    #gather data from symplectic using the APIs, returns canned Toni responses atm.
+    for paper in papers:
+        extract_expertise.augment_profile(paper)
+    for paper in papers3:
+        extract_expertise.augment_profile(paper)

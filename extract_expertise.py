@@ -5,6 +5,7 @@ from nltk import pos_tag
 import nltk
 import string
 import collections
+import database_handlers as dbh
 
 #Francesca Toni's publications from 2016
 papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
@@ -75,35 +76,15 @@ papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with p
 
 remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
-def build_profiles(papers):
-    """Produces a dictionary of name:profile pairs. The profiles are a
-       prioritised list of keywords.
-       
-       papers : a list of papers to build profiles from
-
-       returns : a dictionary of name:profile pairs
-    """
-    profiles = {}
-    for paper in papers:
-        author_list = split_authors(paper['authors'])
-        word_list = split_title(paper['title'])
-        for author in author_list:
-            profiles = augment_author(author, profiles, word_list)
-    return profiles
-
-def augment_profile(paper, profiles):
+def augment_profiles(paper):
     """Given a single paper, augments the author of that paper.
 
        paper : a single paper to augment the author of
-       profiles : the dictionary of name:profile pairs to update
-
-       returns : a dictionary of name:profile pairs
     """
     word_list = split_title(paper['title'])
     authors = split_authors(paper['authors'])
     for author in authors:
-        profiles = augment_author(author, profiles, word_list)
-    return profiles
+        augment_author(author, word_list)
 
 def split_authors(authors):
     """Produces a list of strings containing the authors' names.
@@ -111,9 +92,6 @@ def split_authors(authors):
     authors : a string containing an author list
 
     returns : a list of author names
-
-     split_authors("K. Cyras, K. Satoh, and F. Toni")
-    ['K. Cyras', 'K. Satoh', 'F. Toni']
     """
     split = authors.split(', ')
     author_list = split[:-1]
@@ -138,12 +116,9 @@ def split_title(title):
     """Produces a list of keywords from the paper title with
        boring words removed.
 
-    title : a title to analyse
+       title : a title to analyse
 
-    returns : a list of keywords
-
-     split_title("ABA+: assumption-based argumentation with preferences")
-    ['aba+', 'assumption-based', 'argumentation', 'preferences']
+       returns : a list of keywords
     """
     text = string.replace(title,'-',' ')                                       #replacing hyphens with spaces
     tokens = nltk.word_tokenize(text)                                           #tokenizing the title
@@ -154,31 +129,33 @@ def split_title(title):
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
 
-def augment_author(author, profiles, words):
-    """Given a dict of profiles, an author name, and a list of words
+def augment_author(author, words):
+    """Given a dict of an author name and a list of words
        increase the word counts for the given author appropriately
 
        author : author name to augment
-       profiles : dict of author:word_count pairs
        words : a list of words
-
-       returns : the augmented profile
-
-       augment_author('F. Toni', {'F. Toni':{'argumentation':2}}, ['argumentation', 'preferences'])
-       {'F. Toni': {'argumentation': 3, 'preferences': 1}}
     """
-    if author not in profiles:
-        profiles[author] = {}
+    profiles = dbh.find_profiles({'name':author})[0] #find profiles
+    if profiles == []:
+        dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
+        profiles = [{'name':author, 'keywords':repr({})}]
     for word in words:
-        author_words = profiles[author]
+        author_profile = eval(find_author_profile(author, profiles)) #find first author of given name
+        author_words = author_profile['keywords'] #find author's keywords
         if word not in author_words:
-            author_words[word] = 1
+            author_words[word] = 1 #add new word
         else:
-            author_words[word] += 1
-    x = sorted(profiles[author].items(), key=lambda t: t[1])             #sorting the words from lowest to highest freq in list
-    x.reverse()                                                          #reverse so most frequent at top
-    profiles[author] = collections.OrderedDict(x)                        #storing as ordered dictionary
-    return profiles
+            author_words[word] += 1 #augment old word
+    x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
+    author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
+    dbh.update_profile(author_profile['id'], author_profile) #update row in db
+
+def find_author_profile(author, profiles):
+    for p in profiles:
+        if p['name'] == author:
+            return p
+    return {}
 
 	
 if __name__ == "__main__":

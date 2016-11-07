@@ -39,6 +39,16 @@ def find_profiles(query):
         return (None, False)
     return (response, True)
 
+def update_profile(uid, new_vals):
+    """Updates a profile in the database
+       
+       uid : uid of entry to update
+       new_vals : dictionary of new profile
+    """
+    cols_values = [(k,v) for k,v in new_vals.items()]
+    conds = ["id = \"{}\"".format(uid)]
+    db.update(cols_values, conds)
+
 
 def _convert_for_insert(profile):
     """Converts a profile dictionary into database insert format
