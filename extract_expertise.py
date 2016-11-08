@@ -89,6 +89,7 @@ def augment_profile(paper):
                   'title':'Paper title',
                   'date':'2016-11-27T14:27:34.35+00:00'}
     """
+    print("INSERTING PAPER", paper)
     word_list = split_title(paper['title'])
     authors = paper['authors']
     date = paper['date']
