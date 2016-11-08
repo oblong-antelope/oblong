@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 from nltk import pos_tag, word_tokenize
+from nltk.stem import WordNetLemmatizer
 import string
 import collections
 import utils
