@@ -150,13 +150,13 @@ class DBm:
             if (count < l - 1):
                 cmd = DBm._format_4 % (cmd,
                                        DBm._space,
-                                       "'{}'".format(col),
+                                       col,
                                        DBm._comma)
                 count += 1
             else:
                 cmd = DBm._format_3 % (cmd,
                                        DBm._space,
-                                       "'{}'".format(col))
+                                       col)
         return cmd
         
         
