@@ -7,7 +7,7 @@ TEXT = "text"
 INTEGER = "integer"
 
 PROFILE_T_NAME = "profile_db"
-PROFILE_T_COLUMNS = [("id",INTEGER),("name",TEXT),("keywords",TEXT)]
+PROFILE_T_COLUMNS = [("id", TEXT),("name",TEXT),("keywords",TEXT)]
 PROFILE_T_P_KEY =  ["id"]
 
 db = DBm()
