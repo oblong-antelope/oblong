@@ -171,8 +171,9 @@ def augment_author(author, words, date):
         else:
             author_words[word] += weighting(word, words, date) #augment old word
 
-    x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
-    author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
+    # x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
+    # author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
+    author_profile['keywords'] = repr(author_words)
     print("FINAL AUTHOR_PROFILE", author_profile, x)
     dbh.update_profile(author_profile['id'], author_profile) #update row in db 
 
