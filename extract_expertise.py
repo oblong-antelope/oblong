@@ -173,7 +173,7 @@ def augment_author(author, words, date):
 
     x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
-    print("FINAL AUTHOR_PROFILE", author_profile)
+    print("FINAL AUTHOR_PROFILE", author_profile, x)
     dbh.update_profile(author_profile['id'], author_profile) #update row in db 
 
 def find_author_profile(author, profiles):
