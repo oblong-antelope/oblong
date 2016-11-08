@@ -205,6 +205,7 @@ class DBm:
         cmd = DBm._empty
         count = 0
         for (col, value) in cols_values:
+            value = "'{}'".format(value)
             if (count < l - 1):
                 cmd = DBm._format_8 % (cmd,
                                        DBm._space,
