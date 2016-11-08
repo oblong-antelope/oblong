@@ -181,7 +181,7 @@ class DBm:
         """values is a list of string, must provide value for each column
         in the table, values must be passed in the correct order
             e.g. ["Marry", "32"]"""
-        values = ["'{}'".format(v) for v in values]
+        values = ["'{}'".format(pg.escape_string(v)) for v in values]
         cmd = DBm._format_15 % (DBm._insert_into,
                                 DBm._space,
                                 self.tname,
@@ -205,7 +205,7 @@ class DBm:
         cmd = DBm._empty
         count = 0
         for (col, value) in cols_values:
-            value = pg.escape_string(value)
+            value = "'{}'".format(pg.escape_string(value))
             if (count < l - 1):
                 cmd = DBm._format_8 % (cmd,
                                        DBm._space,
