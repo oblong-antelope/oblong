@@ -161,7 +161,7 @@ def augment_author(author, words, date):
         profiles = [{'name':author, 'keywords':repr({})}]
     for word in words:
         print(author, profiles)
-        author_profile = eval(find_author_profile(author, profiles)) #find first author of given name
+        author_profile = find_author_profile(author, profiles) #find first author of given name
         author_words = author_profile['keywords'] #find author's keywords
         if word not in author_words:
             author_words[word] = weighting(word, words, date) #add new word
