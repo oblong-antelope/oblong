@@ -162,7 +162,6 @@ def augment_author(author, words, date):
         dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
         profiles = [{'name':author, 'keywords':repr({})}]
 
-    print(author, profiles)
     author_profile = find_author_profile(author, profiles) #find first author of given name
     author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
 
@@ -175,6 +174,7 @@ def augment_author(author, words, date):
 
     x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
+    print("FINAL AUTHOR_PROFILE", author_profile)
     dbh.update_profile(author_profile['id'], author_profile) #update row in db
 
 def find_author_profile(author, profiles):
