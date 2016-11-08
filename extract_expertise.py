@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 from nltk.stem import *
-from nltk import pos_tag
+from nltk import pos_tag, taggedwords
 import nltk
 import string
 import collections
@@ -135,7 +135,7 @@ def split_title(title):
            list2 (list): a list of keywords
     """
     text = title.replace('-',' ') #replacing hyphens with spaces
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands and removes boring words
+    list1 = [(x, get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands and removes boring words
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
