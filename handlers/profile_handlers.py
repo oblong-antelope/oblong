@@ -113,6 +113,7 @@ def _get_ordered_results(profiles, name, field):
 
        returns: an ordered list of query results
     """
+    print(profiles)
     results = profiles.values() #extract profiles
     rank = functools.partial(_get_rank, name=name, field=field) #partially apply ranking function to query
     return sorted(results, key=rank, reverse=True) #sort profiles
