@@ -92,7 +92,7 @@ def _convert_for_update(vals):
 
         returns : a list of tuples of the values in vals
     """
-    return [(k,v) for k,v in new_vals.items()]
+    return [(k,v) for k,v in vals.items()]
 
 def _convert_id_query(uid):
     """Converts a uid query into query format
