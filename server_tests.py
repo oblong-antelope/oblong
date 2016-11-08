@@ -47,9 +47,9 @@ import server
 
         full_response = self.app.get(data['results'])
         full_data = json.loads(full_response.data.decode('utf-8'))
-        self.assertEqual(full_data, [])'''
+        self.assertEqual(full_data, [])
 
-'''class PersonResearchSummaryTestCase(unittest.TestCase):
+class PersonResearchSummaryTestCase(unittest.TestCase):
     def setUp(self):
         self.app = server.app.test_client()
 
@@ -62,9 +62,9 @@ import server
             , 'recent_paper': 'https://arXiv.org/abs/1024.01232'
             , 'full_profile': '/api/person/0/full'
             }
-        )'''
+        )
 
-'''class PersonFullTestCase(unittest.TestCase):
+class PersonFullTestCase(unittest.TestCase):
     def setUp(self):
         self.app = server.app.test_client()
 
