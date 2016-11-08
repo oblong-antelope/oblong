@@ -132,7 +132,7 @@ def split_title(title):
        Returns:
            list2 (list): a list of keywords
     """
-    text = string.replace(title,'-',' ')                                       #replacing hyphens with spaces
+    text = title.replace('-',' ')                                       #replacing hyphens with spaces
     tokens = word_tokenize(text)                                           #tokenizing the title
     lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
     taggedwords = pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
