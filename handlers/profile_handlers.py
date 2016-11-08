@@ -44,7 +44,7 @@ def submit_query():
     
     # sort results by expertise (for now needs to be extended)
     expertise = request_json['expertise'] 
-    results = _get_ordered_results(profiles, '', expertise)
+    # results = _get_ordered_results(profiles, '', expertise)
 
     # add to query cache for lookup later
     query_id = str(uuid.uuid4())
