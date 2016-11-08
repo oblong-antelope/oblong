@@ -80,7 +80,7 @@ def _convert_for_insert(profile):
 
         returns : a list of strings of the values in the profile
     """
-    return [ "{}".format(value) for _, value in profile.items()]
+    return [str(profile["id"]), str(profile["name"]), str(profile["keywords"])]
 
 def _convert_for_update(vals):
     """Converts a dictionary of new values into tuples
