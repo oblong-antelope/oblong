@@ -163,7 +163,7 @@ def augment_author(author, words, date):
     
     print("FINDING PROFILES", profiles, status)
 
-    author_profile = find_author_profile(author, eval(profiles)) #find first author of given name
+    author_profile = find_author_profile(author, ast.literal_eval(profiles)) #find first author of given name
     author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
 
     for word in words:    
