@@ -25,11 +25,14 @@ def add_new_profile(profile):
        Generates a new id for the profile
 
        profile : the profile to be inserted
+
+       returns : the inserted profile including the id field
     """
     profile['id'] = str(uuid.uuid4())
     conv = _convert_for_insert(profile)
     print("CONVERSION:", conv)
     db.insert(conv)
+    return profile
 
 def get_profile_by_id(uid):
     """Queries the database by uid
