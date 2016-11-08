@@ -155,11 +155,14 @@ def augment_author(author, words, date):
            words (list): a list of wordds
            date (string): date paper was written
     """
-    (author_profile, status) = dbh.find_profiles({'name':author}) #find profiles
-    
+    (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
+    author_profile = {}
     if not status:
         author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
+    else:
+        author_profile = profiles[0]
     
+
     print("FOUND PROFILES", author_profile, status)
 
     author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
