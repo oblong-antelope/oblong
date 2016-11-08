@@ -5,6 +5,7 @@ from nltk.stem import WordNetLemmatizer
 import string
 import collections
 import utils
+import ast
 from handlers import database_handlers as dbh
 
 #Francesca Toni's publications from 2016
@@ -154,22 +155,26 @@ def augment_author(author, words, date):
            words (list): a list of wordds
            date (string): date paper was written
     """
-    (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
-    print("FINDING PROFILES", profiles, status)
+    (author_profile, status) = dbh.find_profiles({'name':author}) #find profiles
+    
     if not status:
-        dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
-        profiles = [{'name':author, 'keywords':repr({})}]
-    for word in words:
-        print(author, profiles)
-        author_profile = eval(find_author_profile(author, profiles)) #find first author of given name
-        author_words = author_profile['keywords'] #find author's keywords
+        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
+    
+    print("FINDING PROFILES", author_profile, status)
+
+    author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
+
+    for word in words:    
         if word not in author_words:
+            print("AUTHOR_WORDS:", author_words, word)
             author_words[word] = weighting(word, words, date) #add new word
         else:
             author_words[word] += weighting(word, words, date) #augment old word
+
     x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
-    dbh.update_profile(author_profile['id'], author_profile) #update row in db
+    print("FINAL AUTHOR_PROFILE", author_profile)
+    dbh.update_profile(author_profile['id'], author_profile) #update row in db 
 
 def find_author_profile(author, profiles):
     """Finds a given author in a profile list
