@@ -166,8 +166,8 @@ def augment_author(author, words, date):
         author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
         if word not in author_words:
             print("AUTHOR_WORDS:", author_words, word)
-            # author_words.update({word, weighting(word, words, date)})
-            author_words[word] = weighting(word, words, date) #add new word
+            author_words.update({word, weighting(word, words, date)})
+            # author_words[word] = weighting(word, words, date) #add new word
         else:
             author_words[word] += weighting(word, words, date) #augment old word
     x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
