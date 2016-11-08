@@ -181,6 +181,7 @@ class DBm:
         """values is a list of string, must provide value for each column
         in the table, values must be passed in the correct order
             e.g. ["Marry", "32"]"""
+        values = ['"{}"'.format(v) for v in values]
         cmd = DBm._format_15 % (DBm._insert_into,
                                 DBm._space,
                                 self.tname,
