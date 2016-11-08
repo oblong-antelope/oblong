@@ -134,8 +134,11 @@ def split_title(title):
        Returns:
            list2 (list): a list of keywords
     """
-    text = title.replace('-',' ') #replacing hyphens with spaces
-    list1 = [(x, get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands and removes boring words
+    text = string.replace(title,'-',' ')                                       #replacing hyphens with spaces
+    tokens = nltk.word_tokenize(text)                                           #tokenizing the title
+    lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
+    taggedwords = nltk.pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
