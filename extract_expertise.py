@@ -158,6 +158,7 @@ def augment_author(author, words, date):
         dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
         profiles = [{'name':author, 'keywords':repr({})}]
     for word in words:
+        print(author, profiles)
         author_profile = eval(find_author_profile(author, profiles)) #find first author of given name
         author_words = author_profile['keywords'] #find author's keywords
         if word not in author_words:
