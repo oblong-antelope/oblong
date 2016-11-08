@@ -7,8 +7,8 @@ TEXT = "text"
 INTEGER = "integer"
 
 PROFILE_T_NAME = "profile_db"
-PROFILE_T_COLUMNS = [("name",TEXT),("id",INTEGER),("keywords",TEXT)]
-PROFILE_T_P_KEY =  ["name"]
+PROFILE_T_COLUMNS = [("id",INTEGER),("name",TEXT),("keywords",TEXT)]
+PROFILE_T_P_KEY =  ["id"]
 
 db = DBm()
 
@@ -28,6 +28,7 @@ def add_new_profile(profile):
     """
     profile['id'] = str(uuid.uuid4())
     conv = _convert_for_insert(profile)
+    print("CONVERSION:", conv)
     db.insert(conv)
 
 def get_profile_by_id(uid):
