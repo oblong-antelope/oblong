@@ -22,8 +22,10 @@ def submit_data():
 def scrape_symplectic():
     #gather data from symplectic using the APIs, returns canned Toni responses atm.
     for paper in papers:
+        paper["authors"] = paper["authors"].split(", ")
         ee.augment_profile(paper)
     for paper in papers3:
+        paper["authors"] = paper["authors"].split(", ")
         ee.augment_profile(paper)
 
 #Francesca Toni's publications from 2016

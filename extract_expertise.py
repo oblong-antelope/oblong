@@ -25,7 +25,7 @@ def augment_profile(paper):
     """
     print("INSERTING PAPER", paper)
     word_list = split_title(paper['title'])
-    authors = split_authors(paper['authors'])
+    authors = paper['authors']
     date = paper['date']
     for author in authors:
         augment_author(author, paper['title'], word_list, date)
@@ -91,10 +91,15 @@ def augment_author(author, title, words, date):
     """
     (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
     author_profile = {}
+    print(1)
     if not status:
+        print("In Not STATUS")
         author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({}), 'papers':repr([])}) #if none, insert new
+        print("CREATED NEW PROFILE")
     else:
         author_profile = profiles[0]
+    
+    print("AUTHOR PROFILE 1", author_profile)
     
     
     author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
@@ -104,7 +109,7 @@ def augment_author(author, title, words, date):
             author_words[word] = weighting(word, words, date) #add new word
         else:
             author_words[word] += weighting(word, words, date) #augment old word
-    
+    print("AUTHOR PROFILE 2", author_profile)
     # x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     # author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
     author_profile['keywords'] = repr(author_words)
