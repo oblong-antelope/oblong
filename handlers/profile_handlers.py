@@ -84,9 +84,9 @@ def person_summary(person_id):
     (person, status) = dh.get_profile_by_id(person_id)
     words = ast.literal_eval(person['keywords'])
     if status:
-        resp = { 'papers': len(person['papers'])
+        resp = { 'papers': len(ast.literal_eval(person['papers']))
                , 'keywords': sorted(list(words.keys()))
-               , 'recent_paper': person['papers'][0]
+               , 'recent_paper': ast.literal_eval(person['papers'])[0]
                , 'full_profile': '/api/person/{}/full'.format(person['id'])
                }
         return json.dumps(resp)
