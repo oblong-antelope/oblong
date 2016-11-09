@@ -101,7 +101,7 @@ def person_full(person_id):
        returns : json containing the entire profile
     """
     (person, status) = dh.get_profile_by_id(person_id)
-    person['keyowords'] = ast.literal_eval(person['keywords'])
+    person['keywords'] = ast.literal_eval(person['keywords'])
     person['papers'] = ast.literal_eval(person['papers'])
     if status:
         return json.dumps(person)
