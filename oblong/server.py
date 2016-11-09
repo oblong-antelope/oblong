@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- encoding: utf-8 -*-
 """Webserver to allow queries to user profiles."""
 from collections import defaultdict
 import json
@@ -154,7 +152,3 @@ def submit_data():
 def shutdown_session(exception=None):
     """Ensures that ``db_session`` is closed at the end of each request."""
     db_session.remove()
-
-if __name__ == '__main__':
-    heroku_port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=heroku_port)
