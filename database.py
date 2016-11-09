@@ -61,7 +61,7 @@ class DBm:
         self._database.query(query)
 
     def create_table(self, name, cols, primary=[]):
-        #self.remove_table(name)
+        self.remove_table(name)
         """name is a string name of the table
         cols is a list of pairs of strings (attribute, type)
             e.g. [("name", "text"), ("age", "integer")]
