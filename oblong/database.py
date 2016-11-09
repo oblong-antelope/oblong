@@ -7,6 +7,10 @@ Attributes:
         can be used to access the database, see above examples.
 
 Examples:
+    Intialise the module:
+
+    >>> init("postgresql://postgres:oblong@localhost/postgres")
+
     Create a profile:
 
     >>> p = Profile(name='John', keywords={'hello': 7, 'world': 1})
@@ -46,20 +50,17 @@ from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 __author__ = 'Blaine Rogers <br1314@ic.ac.uk>'
 
-#: Enumeration type for query status.
-Status = Enum("in_progress", "finished", "deleted", name="Status")
-
 #: The database engine.
-engine = create_engine('postgresql://postgres:oblong@localhost/postgres')
-
+engine = None
 #: A thread-safe session.
-db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
+db_session = None
 
 #: The declarative base class.
 Base = declarative_base()
 Base.query = db_session.query_property()
+
+#: Enumeration type for query status.
+Status = Enum("in_progress", "finished", "deleted", name="Status")
 
 #: Association table for many-to-many link between queries and profiles.
 query_association = Table(
@@ -92,4 +93,27 @@ class Query(Base):
         return ('<Query {id:d} {status:s}>'
                 .format(id=self.id, status=self.status))
 
-Base.metadata.create_all(bind=engine)
+def init(connection_url):
+    """Intialises the module by setting up an engine and session.
+    
+    Args:
+        connection_url (str): The url of the database to connect to.
+            From the `SQLAlchemy docs`_:
+                
+                The string form of the URL is 
+                ``dialect[+driver]://user:password@host/dbname[?key=value..]``,
+                where ``dialect`` is a database name such as ``mysql``,
+                ``oracle``, ``postgresql``, etc., and ``driver`` the 
+                name of a DBAPI, such as ``psycopg2``, ``pyodbc``, 
+                ``cx_oracle``, etc. Alternatively, the URL can be an 
+                instance of ``sqlalchemy.engine.url.URL``.
+
+    .. _SQLAlchemy docs: http://docs.sqlalchemy.org/en/rel_1_1/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
+
+    """
+    global Base, Status, engine, db_session
+    engine = create_engine('postgresql://postgres:oblong@localhost/postgres')
+    db_session = scoped_session(sessionmaker(autocommit=False,
+                                             autoflush=False,
+                                             bind=engine))
+    Base.metadata.create_all(bind=engine)
