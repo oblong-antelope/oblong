@@ -41,7 +41,7 @@ def submit_query():
     for profile in profiles:
         person = '/api/person/{}/'.format(profile['id'])
         profile['research_summary'] = person + 'summary'
-        profile['full_profile'] = person + 'full'
+        profile['full_profile'] = person + 'full' 
         profile['papers'] = ast.literal_eval(profile['papers'])
     
     # sort results by expertise (for now needs to be extended)
