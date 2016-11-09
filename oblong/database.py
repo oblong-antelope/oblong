@@ -1,254 +1,95 @@
-import pg
-import os
-import config
-import urllib.parse as urlparse
+"""A database for storing profiles and queries.
 
-urlparse.uses_netloc.append("postgres")
-url = urlparse.urlparse(os.environ["DATABASE_URL"])
+Attributes:
+    engine (sqlalchemy.Engine): The database engine. You shouldn't need
+        to interact with this object.
+    db_session (sqlalchemy.scoped_session): A thread-safe session that
+        can be used to access the database, see above examples.
 
-class DBm:
+Examples:
+    Create a profile:
 
-    _create_table = "CREATE TABLE"
-    _primary_key = "PRIMARY KEY"
-    _from = "FROM"
-    _where = "WHERE"
-    _and = "AND"
-    _select = "SELECT"
-    _insert_into = "INSERT INTO"
-    _values = "VALUES"
-    _update_str = "UPDATE"
-    _drop_table = "DROP TABLE"
-    _set = "SET"
-    _empty = ""
-    _space = " "
-    _equal = "="
-    _semi_colon = ";"
-    _comma = ","
-    _left_p = "("
-    _right_p = ")"
-    _format_3 = "%s%s%s"
-    _format_4 = "%s%s%s%s"
-    _format_5 = "%s%s%s%s%s"
-    _format_6 = "%s%s%s%s%s%s"
-    _format_7 = "%s%s%s%s%s%s%s"
-    _format_8 = "%s%s%s%s%s%s%s%s"
-    _format_9 = "%s%s%s%s%s%s%s%s%s"
-    _format_15 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+    >>> p = Profile(name='John', keywords={'hello': 7, 'world': 1})
+    >>> db_session.add(p)
+    >>> db_session.commit()
 
-    def __init__(self):
-        self._database = pg.connect(
-    		dbname=url.path[1:],
-    		user=url.username,
-    		passwd=url.password,
-    		host=url.hostname,
-    		port=url.port)
+    Retrieve profiles:
 
-        self.dbname = url.path[1:]
-        self.host = url.hostname
-        self.port = url.port
-        self.user = url.username
-        self.passwd = url.password
-        self.isOpen = True
+    >>> db_session.query(Profile).filter(Profile.name == 'John').all()
+    [<Profile ... John>]
+    >>> Profile.query.filter(Profile.name == 'John').all()
+    [<Profile ... John>]
+    >>> Profile.query.filter(Profile.keywords.has_key('hello')).all()
+    [<Profile ... John>]
 
-    def close(self, query):
-        self._database.close()
-        self.isOpen = False
+    Change a profile:
 
-    def _query(self, query):
-        return (self._database.query(query)).dictresult()
+    >>> p = Profile.query.first()
+    >>> p.name = 'John Smith'
+    >>> p.keywords['face'] = 12
+    >>> p.awards.append('An Award')
+    >>> db_session.commit()
 
-    def _update(self, query):
-        self._database.query(query)
+    Remove a profile:
 
-    def create_table(self, name, cols, primary=[]):
-        self.remove_table(name)
-        """name is a string name of the table
-        cols is a list of pairs of strings (attribute, type)
-            e.g. [("name", "text"), ("age", "integer")]
-        primary is a list of strngs, denotes the primary key
-            e.g. ["name"]"""
-        cmd = DBm._format_4 % (DBm._create_table,
-                               DBm._space,
-                               name,
-                               DBm._left_p)
-        l1 = len(cols)
-        l2 = len(primary)
-        count = 0
-        for (col, t) in cols:
-            if (l2 > 0 or count < l1 - 1):
-                cmd = DBm._format_6 % (cmd,
-                                       DBm._space,
-                                       col,
-                                       DBm._space,
-                                       t,
-                                       DBm._comma)
-                count += 1
-            else:
-                cmd = DBm._format_5 % (cmd,
-                                       DBm._space,
-                                       col,
-                                       DBm._space,
-                                       t)
-        if (l2 > 0):
-            cmd = DBm._format_4 % (cmd,
-                                   DBm._space,
-                                   DBm._primary_key,
-                                   DBm._left_p)
-            count = 0
-            for k in primary:
-                if (count < l2 - 1):
-                    cmd = DBm._format_4 % (cmd,
-                                           DBm._space,
-                                           k,
-                                           DBm._comma)
-                    count += 1
-                else:
-                    cmd = DBm._format_5 % (cmd,
-                                           DBm._space,
-                                           k,
-                                           DBm._space,
-                                           DBm._right_p)
-        cmd = DBm._format_4 % (cmd,
-                               DBm._space,
-                               DBm._right_p,
-                               DBm._semi_colon)
-        cols_name, cols_type = zip(*cols)
-        self.cols_name = cols_name
-        self.cols_type = cols_type
-        self.tname = name
-        self.no_cols = len(cols)
-        self.primary = primary
-        self._update(cmd)
-        
-    def _where_cond(self, conds):
-        l = len(conds)
-        if (l == 0):
-            return DBm._empty
-        cmd = DBm._where
-        count = 0
-        for cond in conds:
-            if (count < l - 1):
-                cmd = DBm._format_5 % (cmd,
-                                      DBm._space,
-                                      cond,
-                                      DBm._space,
-                                      DBm._and)
-                count += 1
-            else:
-                cmd = DBm._format_3 % (cmd,
-                                       DBm._space,
-                                       cond)
-        return cmd
-        
-    def _gen_list(self, cols):
-        l = len(cols)
-        if (l == 0):
-            return DBm._empty
-        cmd = DBm._empty
-        count = 0
-        for col in cols:
-            if (count < l - 1):
-                cmd = DBm._format_4 % (cmd,
-                                       DBm._space,
-                                       col,
-                                       DBm._comma)
-                count += 1
-            else:
-                cmd = DBm._format_3 % (cmd,
-                                       DBm._space,
-                                       col)
-        return cmd
-        
-        
-    def search(self, conds):
-        """conds is a list of strings, denotes the conds for filter
-        format: attribut=value, attribute>value etc.
-            e.g. ["name = \'john\'", "age > 36"]
-        returns a list of dictionaries, each one is a row in the
-        database"""
-        cmd = DBm._format_9 % (DBm._select,
-                               self._gen_list(self.cols_name),
-                               DBm._space,
-                               DBm._from,
-                               DBm._space,
-                               self.tname,
-                               DBm._space,
-                               self._where_cond(conds),
-                               DBm._semi_colon)
-        return self._query(cmd)
-        
-    def insert(self, values):
-        """values is a list of string, must provide value for each column
-        in the table, values must be passed in the correct order
-            e.g. ["Marry", "32"]"""
-        values = ["'{}'".format(pg.escape_string(v)) for v in values]
-        cmd = DBm._format_15 % (DBm._insert_into,
-                                DBm._space,
-                                self.tname,
-                                DBm._space,
-                                DBm._left_p,
-                                self._gen_list(self.cols_name),
-                                DBm._space,
-                                DBm._right_p,
-                                DBm._space,
-                                DBm._values,
-                                DBm._left_p,
-                                self._gen_list(values),
-                                DBm._space,
-                                DBm._right_p,
-                                DBm._semi_colon)
-        
-        self._update(cmd)
-        
-    def _gen_pair_assign_list(self, cols_values):
-        l = len(cols_values)
-        cmd = DBm._empty
-        count = 0
-        for (col, value) in cols_values:
-            value = "'{}'".format(pg.escape_string(value))
-            if (count < l - 1):
-                cmd = DBm._format_8 % (cmd,
-                                       DBm._space,
-                                       col,
-                                       DBm._space,
-                                       DBm._equal,
-                                       DBm._space,
-                                       value,
-                                       DBm._comma)
-                count += 1
-            else:
-                cmd = DBm._format_7 % (cmd,
-                                       DBm._space,
-                                       col,
-                                       DBm._space,
-                                       DBm._equal,
-                                       DBm._space,
-                                       value)
-        return cmd
-        
-    def update(self, cols_values, conds):
-        """cols_values is a list of pairs of strings
-        format: (attribute, value)
-           e.g. [("name", "\'john\'"), ("age", "30")]
-        conds is the same as in search"""
-        cmd = DBm._format_9 % (DBm._update_str,
-                               DBm._space,
-                               self.tname,
-                               DBm._space,
-                               DBm._set,
-                               self._gen_pair_assign_list(cols_values),
-                               DBm._space,
-                               self._where_cond(conds),
-                               DBm._semi_colon)
-        self._update(cmd)
-        
-    def remove_table(self, name):
-        self._update(DBm._format_4 % (DBm._drop_table,
-                                      DBm._space,
-                                      name,
-                                      DBm._semi_colon))
-        
-    
+    >>> p = Profile.query.first()
+    >>> db_session.delete(p)
+    >>> db_session.commit()
 
+"""
+from sqlalchemy import (create_engine, Table, Column,
+    Enum, Integer, Text, ForeignKey)
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableDict, MutableList
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 
-    
+__author__ = 'Blaine Rogers <br1314@ic.ac.uk>'
+
+#: Enumeration type for query status.
+Status = Enum("in_progress", "finished", "deleted", name="Status")
+
+#: The database engine.
+engine = create_engine('postgresql://postgres:oblong@localhost/postgres')
+
+#: A thread-safe session.
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
+
+#: The declarative base class.
+Base = declarative_base()
+Base.query = db_session.query_property()
+
+#: Association table for many-to-many link between queries and profiles.
+query_association = Table(
+    'query_association', Base.metadata,
+    Column('query_id', Integer, ForeignKey('queries.id')),
+    Column('profile_id', Integer, ForeignKey('profile.id'))
+)
+
+class Profile(Base):
+    """Table to contain user profiles."""
+    __tablename__ = 'profile'
+    id = Column(Integer, primary_key=True)
+    name = Column(Text)
+    keywords = Column(MutableDict.as_mutable(JSONB))
+    papers = Column(JSON)
+    awards = Column(JSON)
+
+    def __repr__(self):
+        return ('<Profile {id:d} {name:s}>'
+                .format(id=self.id, name=self.name))
+
+class Query(Base):
+    """Table to contain queries."""
+    __tablename__ = 'queries'
+    id = Column(Integer, primary_key=True)
+    status = Column(Status)
+    results = relationship(Profile, secondary=query_association)
+
+    def __repr__(self):
+        return ('<Query {id:d} {status:s}>'
+                .format(id=self.id, status=self.status))
+
+Base.metadata.create_all(bind=engine)

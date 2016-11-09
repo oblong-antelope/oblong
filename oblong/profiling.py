@@ -1,173 +1,124 @@
-#!/usr/bin/python
-# -*- coding: utf8 -*-
+"""Algorithms that profile users based on paper metadata."""
+from os import linesep
+from time import gmtime
+
 from nltk import pos_tag, word_tokenize
 from nltk.stem import WordNetLemmatizer
-import string
-import collections
-import utils
-import ast
-from handlers import database_handlers as dbh
+from database import db_session, Profile, Query
+from sqlalchemy import NoResultFound
 
-remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
-def augment_profile(paper):
-    """Given a single paper, augments the author of that paper.
+def fulfill_query(query, name=None, expertise=None):
+    """Fulfills a query by searching the database.
 
-       Creates or refines the profiles of all authors of the paper
-       in the profile database.
+    Args:
+        query (database.Query): The query to fulfill.
+        name (str): Only profiles with this name will be returned.
+        expertise (str): This string will be searched for keywords,
+            and profiles containing those keywords will be returned.
 
-       Args:
-           paper (dict): a single paper of which to augment the author
-              the paper will be of the format:
-                 {'authors':['Toni F.'],
-                  'title':'Paper title',
-                  'date':'2016-11-27T14:27:34.35+00:00'}
     """
-    print("INSERTING PAPER", paper)
-    word_list = split_title(paper['title'])
-    authors = paper['authors']
-    date = paper['date']
-    for author in authors:
-        augment_author(author, paper['title'], word_list, date)
+    if not (name or expertise):
+        query.status = "finished"
+        db_session.commit()
+        return
 
-def split_authors(authors):
-    """Produces a list of strings containing the authors' names.
+    profiles = Profile.query
 
-       Args:
-           authors (string): the authors' names
+    if name:
+        profiles = profiles.filter(Profile.name == name)
 
-       Returns:
-           author_list (list): a list of author names
-    """
-    split = authors.split(', ')
-    author_list = split[:-1]
-    author_list.extend(author for author in split[-1].split('and ') if author != '')
-    return author_list
-
-def get_lemma_pos(tag):  #needed to for part of speech tagging for lemmatizer
-
-    if tag.startswith('J'):
-        return 'a'
-    elif tag.startswith('V'):
-        return 'v'
-    elif tag.startswith('N'):
-        return 'n'
-    elif tag.startswith('R'):
-        return 'r'
-    else:
-        return 'n'
-
-
-def split_title(title):
-    """Produces a list of keywords from the paper title with
-       boring words removed.
-
-       Args:
-          title (string): a title to analyse
-
-       Returns:
-           list2 (list): a list of keywords
-    """
-    text = title.replace('-',' ')                                       #replacing hyphens with spaces
-    tokens = word_tokenize(text)                                           #tokenizing the title
-    lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
-    taggedwords = pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in open('stopwords.txt').read()] #converts those to format lemmatizer understands
-    wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
-    list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
-    return list2
-
-def augment_author(author, title, words, date):
-    """Augments the author profiles given words
-
-       Given a dict of an author name and a list of words
-       increase the word counts for the given author appropriately
-
-       Args:
-           author (string): author name to augment
-           title (string): title of the paper
-           words (list): a list of wordds
-           date (string): date paper was written
-    """
-    (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
-    author_profile = {}
-    print(1)
-    if not status:
-        print("In Not STATUS")
-        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({}), 'papers':repr([])}) #if none, insert new
-        print("CREATED NEW PROFILE")
-    else:
-        author_profile = profiles[0]
+    if expertise:
+        keywords = get_keywords(expertise)
+        profiles = profiles.filter(Profile.keywords.has_any(keywords))
     
-    print("AUTHOR PROFILE 1", author_profile)
-    
-    
-    author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
+    q.results = profiles.all()
+    q.status = "finished"
+    db_session.commit()
 
-    for word in words:    
-        if word not in author_words:
-            author_words[word] = weighting(word, words, date) #add new word
-        else:
-            author_words[word] += weighting(word, words, date) #augment old word
-    print("AUTHOR PROFILE 2", author_profile)
-    # x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
-    # author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
-    author_profile['keywords'] = repr(author_words)
+def update_authors_profiles(title, author_names, date):
+    """Updates the profiles of the authors of a new paper.
 
-    author_titles = ast.literal_eval(author_profile['papers'])
-    author_titles.append(title)
-    author_profile['papers'] = repr(author_titles)
-    print("AUTHOR_PROFILE_UPDATE", author_profile)
-    print()
-    dbh.update_profile(author_profile['id'], author_profile) #update row in db 
+    Args:
+        title (str): The title of the new paper.
+        author_names (Sequence[str]): The names of the authors of the
+            new paper.
+        date (str): The date of the new paper in XML datetime format.
 
-def find_author_profile(author, profiles):
-    """Finds a given author in a profile list
-
-       Args:
-           author (string): author name to find
-           profiles (list): list of profiles to search
-
-       Returns:
-           p (dict): a dictionary representing an author profile
     """
-    for p in profiles:
-        if p['name'] == author:
-            return p
-    return {}
+    keywords = get_keywords(title)
+    for name in author_names:
+        try:
+            profile = Profile.query.filter(Profile.name == name).one()
+        except NoResultFound:
+            profile = Profile(name=name, keywords={}, papers=[], awards=[])
+            db_session.add(profile)
+        
+        for word in keywords:
+            if word not in profile.keywords:
+                profile.keywords[word] = 0
+            profile.keywords[word] += weighting(word, keywords, date)
+
+        profile.papers.append(title)
+    db_session.commit()
+
+def get_keywords(text):
+    """Gets the keywords from a text excerpt.
+
+    The text is split into words and the boring words are removed.
+
+    Args:
+        text (str): The text to get keywords from.
+
+    Returns:
+        (Sequence[str]): The keywords of the text.
+
+    """
+    text = text.replace('-', ' ')
+    tokens = [word.lower() for word in word_tokenize(text)]
+
+    # tag words as verb, noun etc to help lemmatizer
+    tagged_words = pos_tag(tokens)
+
+    # retreive list of boring words from file
+    with open('data/stopwords.txt', 'r') as f:
+        stopwords = [line.rstrip(linesep) for line in f]
+
+    # convert tagged words to a format that the lemmatizer understands
+    lemmatizables = [(x, get_lemma_pos(y)) for x, y in tagged_words
+                     if x not in stopwords]
+
+    lemmatizer = WordNetLemmatizer()
+    return [lemmatizer.lemmatize(x, pos=y) for x, y in lemmatizables]
 
 def weighting(word, words, date):
-    """A weighting function based on words and date.
+    """Weights the importance of a keyword.
 
-       The function used currently is linear deprecation up
-       to a time gap of fifty years.
+    The function used currently is linear deprecation up to a time gap
+    of fifty years.
 
-       Parameters:
-           FUNC : function to produce weight given time diff
-           CUTOFF : cutoff for gradual weighting
-           BASE : lowest weighting. time_diffs after the CUTOFF
-                  get this weight by default
+    Parameters:
+        FUNC (Callable[[int], Number]): Function to produce a weighting
+            given time diff in years.
+        CUTOFF (int): lowest time diff after which the lowest weighting
+            will be given.
+        BASE (Number): the lowest possible weighting.
 
-       Args:
-           word (string): the word we're weighting
-           words (list): other words in the title
-           date (string): date the paper was written
+    Args:
+        word (str): The word to weight.
+        words (Sequence[str]): All keywords in the text.
+        date (str): Date the paper was written, in XML format.
 
-       Returns:
-           weighting (int): a weighted number representing
-               how important this occurence of the word is
+    Returns:
+        (int): a number representing how important this occurence of
+        the word is.
+
     """
-    FUNC = (lambda d: -0.09*d + 5)
+    def FUNC(d): return -.09 * d + 5
     CUTOFF = 50
-    BASE = 0.5
-    import time
+    BASE = .5
+
     year = int(date[:4])
-    current_year = time.gmtime()[0]
+    current_year = gmtime()[0]
     time_diff = current_year - year
-    weighting = FUNC(time_diff) if time_diff <= CUTOFF else BASE
-    return weighting
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    return FUNC(time_diff) if time_diff <= CUTOFF else BASE
