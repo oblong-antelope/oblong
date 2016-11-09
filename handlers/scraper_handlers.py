@@ -14,6 +14,8 @@ def submit_data():
             authors = paper['authors']
             date = paper['date']
             ee.augment_profile(paper)
+            response = {'success': True}
+            return json.dumps(response), 201
         except:
             return 'paper should have fields: title, authors, date', 415
     else:
