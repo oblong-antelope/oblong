@@ -72,7 +72,7 @@ def split_title(title):
     tokens = word_tokenize(text)                                           #tokenizing the title
     lowertokens = [word.lower() for word in tokens]                             #converting all words to lowercase
     taggedwords = pos_tag(lowertokens)                                    #tagging words as verb, noun etc to help lemmatizer
-    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in remove] #converts those to format lemmatizer understands
+    list1 = [(x,get_lemma_pos(y)) for (x,y) in taggedwords if x not in open('stopwords.txt').read()] #converts those to format lemmatizer understands
     wl = WordNetLemmatizer()                                                    #initialising the lemmatizer
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
