@@ -25,7 +25,7 @@ def augment_profile(paper):
     """
     print("INSERTING PAPER", paper)
     word_list = split_title(paper['title'])
-    authors = split_authors(paper['authors'])
+    authors = paper['authors']
     date = paper['date']
     for author in authors:
         augment_author(author, paper['title'], word_list, date)
