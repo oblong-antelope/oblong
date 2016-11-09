@@ -3,7 +3,7 @@
 Attributes:
     engine (sqlalchemy.Engine): The database engine. You shouldn't need
         to interact with this object.
-    db_session (sqlalchemy.scoped_session): A thread-safe session that
+    session (sqlalchemy.scoped_session): A thread-safe session that
         can be used to access the database, see above examples.
 
 Examples:
@@ -14,12 +14,12 @@ Examples:
     Create a profile:
 
     >>> p = Profile(name='John', keywords={'hello': 7, 'world': 1})
-    >>> db_session.add(p)
-    >>> db_session.commit()
+    >>> session.add(p)
+    >>> session.commit()
 
     Retrieve profiles:
 
-    >>> db_session.query(Profile).filter(Profile.name == 'John').all()
+    >>> session.query(Profile).filter(Profile.name == 'John').all()
     [<Profile ... John>]
     >>> Profile.query.filter(Profile.name == 'John').all()
     [<Profile ... John>]
@@ -32,13 +32,13 @@ Examples:
     >>> p.name = 'John Smith'
     >>> p.keywords['face'] = 12
     >>> p.awards.append('An Award')
-    >>> db_session.commit()
+    >>> session.commit()
 
     Remove a profile:
 
     >>> p = Profile.query.first()
-    >>> db_session.delete(p)
-    >>> db_session.commit()
+    >>> session.delete(p)
+    >>> session.commit()
 
 """
 from sqlalchemy import (create_engine, Table, Column,
@@ -53,12 +53,9 @@ __author__ = 'Blaine Rogers <br1314@ic.ac.uk>'
 #: The database engine.
 engine = None
 #: A thread-safe session.
-db_session = None
-
+session = None
 #: The declarative base class.
 Base = declarative_base()
-Base.query = db_session.query_property()
-
 #: Enumeration type for query status.
 Status = Enum("in_progress", "finished", "deleted", name="Status")
 
@@ -111,9 +108,10 @@ def init(connection_url):
     .. _SQLAlchemy docs: http://docs.sqlalchemy.org/en/rel_1_1/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
 
     """
-    global Base, Status, engine, db_session
+    global Base, engine, session
     engine = create_engine('postgresql://postgres:oblong@localhost/postgres')
-    db_session = scoped_session(sessionmaker(autocommit=False,
+    session = scoped_session(sessionmaker(autocommit=False,
                                              autoflush=False,
                                              bind=engine))
+    Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)

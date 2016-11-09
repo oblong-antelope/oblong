@@ -1,11 +1,13 @@
 """Algorithms that profile users based on paper metadata."""
 from os import linesep
+import os.path
 from time import gmtime
 
 from nltk import pos_tag, word_tokenize
 from nltk.stem import WordNetLemmatizer
-from database import db_session, Profile, Query
-from sqlalchemy import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
+
+import database as db
 
 
 def fulfill_query(query, name=None, expertise=None):
@@ -20,21 +22,21 @@ def fulfill_query(query, name=None, expertise=None):
     """
     if not (name or expertise):
         query.status = "finished"
-        db_session.commit()
+        db.session.commit()
         return
 
-    profiles = Profile.query
+    profiles = db.Profile.query
 
     if name:
-        profiles = profiles.filter(Profile.name == name)
+        profiles = profiles.filter(db.Profile.name == name)
 
     if expertise:
         keywords = get_keywords(expertise)
-        profiles = profiles.filter(Profile.keywords.has_any(keywords))
+        profiles = profiles.filter(db.Profile.keywords.has_any(keywords))
     
-    q.results = profiles.all()
-    q.status = "finished"
-    db_session.commit()
+    query.results = profiles.all()
+    query.status = "finished"
+    db.session.commit()
 
 def update_authors_profiles(title, author_names, date):
     """Updates the profiles of the authors of a new paper.
@@ -49,10 +51,10 @@ def update_authors_profiles(title, author_names, date):
     keywords = get_keywords(title)
     for name in author_names:
         try:
-            profile = Profile.query.filter(Profile.name == name).one()
+            profile = db.Profile.query.filter(db.Profile.name == name).one()
         except NoResultFound:
-            profile = Profile(name=name, keywords={}, papers=[], awards=[])
-            db_session.add(profile)
+            profile = db.Profile(name=name, keywords={}, papers=[], awards=[])
+            db.session.add(profile)
         
         for word in keywords:
             if word not in profile.keywords:
@@ -60,7 +62,7 @@ def update_authors_profiles(title, author_names, date):
             profile.keywords[word] += weighting(word, keywords, date)
 
         profile.papers.append(title)
-    db_session.commit()
+    db.session.commit()
 
 def get_keywords(text):
     """Gets the keywords from a text excerpt.
@@ -81,7 +83,8 @@ def get_keywords(text):
     tagged_words = pos_tag(tokens)
 
     # retreive list of boring words from file
-    with open('data/stopwords.txt', 'r') as f:
+    basedir = os.path.dirname(__file__)
+    with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
 
     # convert tagged words to a format that the lemmatizer understands
@@ -90,6 +93,15 @@ def get_keywords(text):
 
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(x, pos=y) for x, y in lemmatizables]
+
+def get_lemma_pos(tag):
+    """Magic function, speak to Aran Dhaliwal."""
+    mapping = { 'J': 'a'
+              , 'V': 'v'
+              , 'N': 'n'
+              , 'R': 'r'
+              }
+    return mapping.get(tag[0], 'n')
 
 def weighting(word, words, date):
     """Weights the importance of a keyword.

@@ -6,8 +6,9 @@ import os
 from flask import Flask, abort, request
 from flask_cors import CORS
 
-from database import db_session, Profile, Query
+import database as db
 import profiling
+
 
 # Init Flask App
 app = Flask(__name__)
@@ -42,9 +43,9 @@ def submit_query():
                    }
         return json.dumps('JSON, please.'), 415
  
-    q = Query(status="finished", results=matches)
-    db_session.add(q)
-    db_session.commit()
+    q = db.Query(status="in_progress")
+    db.session.add(q)
+    db.session.commit()
 
     profiling.fulfill_query(q, request_json['name'], request_json['expertise'])
         
@@ -67,11 +68,11 @@ def get_query(query_id):
         query_id (str): The unique id of the query to be retrieved.
 
     """
-    q = Query.query.get(query_id)
+    q = db.Query.query.get(query_id)
     if not q:
         abort(404)
     else:
-        result = {'status': q.status)
+        result = {'status': q.status}
         profiles = []
         for profile in q.results:
             uri_stub = '/api/person/{id:d}'.format(id=profile.id)
@@ -81,7 +82,7 @@ def get_query(query_id):
                             })
         if profiles:
             result['results'] = profiles
-        return json.dumps(results)
+        return json.dumps(result)
 
 @app.route('/api/person/<person_id>/summary')
 def person_summary(person_id):
@@ -96,7 +97,7 @@ def person_summary(person_id):
             profile summary of.
 
     """
-    profile = Profile.query.get(person_id)
+    profile = db.Profile.query.get(person_id)
     if not profile:
         abort(404)
     else:
@@ -120,7 +121,7 @@ def person_full(person_id):
             profile summary of.
 
     """
-    profile = Profile.query.get(person_id)
+    profile = db.Profile.query.get(person_id)
     if not profile:
         abort(404)
     else:
@@ -150,5 +151,5 @@ def submit_data():
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
-    """Ensures that ``db_session`` is closed at the end of each request."""
-    db_session.remove()
+    """Ensures that ``db.session`` is closed at the end of each request."""
+    db.session.remove()

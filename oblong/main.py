@@ -6,13 +6,14 @@ import os
 import database
 import server
 
-DATABASE_URL = os.environ["OBLONG_DATABASE_URL"]
+
+DATABASE_URL = os.getenv("OBLONG_DATABASE_URL")
 database.init(DATABASE_URL)
 
 parser = argparse.ArgumentParser(description='Oblong eexpertise mining.')
-parser.add_argument('-h', '--host', metavar='IP', default='localhost',
+parser.add_argument('--host', metavar='IP', default='localhost',
         help='The host to pass to `Flask.run()`')
-parser.add_argument('-p', '--port', metavar='PORT', type=int,
+parser.add_argument('--port', metavar='PORT', type=int,
         default=5000, help='The port to pass to `Flask.run()`')
 args = parser.parse_args()
 
