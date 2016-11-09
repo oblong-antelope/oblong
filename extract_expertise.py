@@ -109,9 +109,9 @@ def augment_author(author, title, words, date):
     # author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
     author_profile['keywords'] = repr(author_words)
 
-    author_titles = ast.literal_eval(author_profile['title'])
+    author_titles = ast.literal_eval(author_profile['papers'])
     author_titles.append(title)
-    author_profile['title'] = repr(author_titles)
+    author_profile['papers'] = repr(author_titles)
     print("AUTHOR_PROFILE_UPDATE", author_profile)
     print()
     dbh.update_profile(author_profile['id'], author_profile) #update row in db 
