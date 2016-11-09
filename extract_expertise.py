@@ -92,7 +92,7 @@ def augment_author(author, title, words, date):
     (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
     author_profile = {}
     if not status:
-        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({}), 'title':repr([])}) #if none, insert new
+        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({}), 'papers':repr([])}) #if none, insert new
     else:
         author_profile = profiles[0]
     
