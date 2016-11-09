@@ -7,6 +7,7 @@ from collections import defaultdict
 import functools
 import editdistance
 import pylru
+import ast
 from flask import request, abort
 from handlers import database_handlers as dh
 #import extract_expertise
@@ -80,9 +81,10 @@ def person_summary(person_id):
                  contains - papers, keywords, recent_paper, full_profile
     """
     (person, status) = dh.get_profile_by_id(person_id)
+    words = ast.literal_eval(person['keywords'])
     if status:
         resp = { 'papers': len(person['papers'])
-               , 'keywords': sorted(list(person['keywords'].keys()))
+               , 'keywords': sorted(list(words.keys()))
                , 'recent_paper': person['papers'][0]
                , 'full_profile': '/api/person/{}/full'.format(person['id'])
                }
