@@ -8,73 +8,6 @@ import utils
 import ast
 from handlers import database_handlers as dbh
 
-#Francesca Toni's publications from 2016
-papers = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
-            "authors" : "Y. Gao, F. Toni, H. Wang, and F. Xu",
-            "date"    : "2016"},
-           {"title"   : "On the interplay between games, argumentation and dialogues",
-            "authors" : "X. Fan and F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Discontinuity-free decision support with quantitative argumentation debates",
-            "authors" : "A. Rago, F. Toni, M. Aurisicchio, and P. Baroni",
-            "date"    : "2016"},
-           {"title"   : "Abstract argumentation for case-based reasoning",
-            "authors" : "K. Cyras, K. Satoh, and F. Toni",
-            "date"    : "2016"},
-           {"title"   : "ABA+: assumption-based argumentation with preferences",
-            "authors" : "K. Cyras and F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Properties of ABA+ for non-monotonic reasoning",
-            "authors" : "K. Cyras and F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Smarter electricity and argumentation theory",
-            "authors" : "M. Makriyiannis, T. Lung, R. Craven, F. Toni, and J. Kelly",
-            "date"    : "2016"},
-           {"title"   : "Online Argumentation-Based Platform for Recommending Medical Literature",
-            "authors" : "A. Mocanu, X. Fan, F. Toni, M. Williams, and J. Chen",
-            "date"    : "2016"},
-           {"title"   : "Justifying Answer Sets using Argumentation",
-            "authors" : "C. Schulz, F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Argument Graphs and Assumption-Based Argumentation",
-            "authors" : "R. Craven and F. Toni",
-            "date"    : "2016"}
-         ]
-
-
-papers3 = [ {"title"   : "Argumentation-based multi-agent decision making with privacy preserved",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "On the interplay between games, argumentation and dialogues",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Discontinuity-free decision support with quantitative argumentation debates",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Abstract argumentation for case-based reasoning",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "ABA+: assumption-based argumentation with preferences",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Properties of ABA+ for non-monotonic reasoning",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Smarter electricity and argumentation theory",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Online Argumentation-Based Platform for Recommending Medical Literature",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Justifying Answer Sets using Argumentation",
-            "authors" : "F. Toni",
-            "date"    : "2016"},
-           {"title"   : "Argument Graphs and Assumption-Based Argumentation",
-            "authors" : "F. Toni",
-            "date"    : "2016"}
-         ]
-
-
 remove = ['for', 'and', 'a', 'the', 'with', 'of', 'using', 'on','between','based','non',',','.',':',';'] #boring stuff to get rid of
 
 def augment_profile(paper):
@@ -95,7 +28,7 @@ def augment_profile(paper):
     authors = split_authors(paper['authors'])
     date = paper['date']
     for author in authors:
-        augment_author(author, word_list, date)
+        augment_author(author, paper['title'], word_list, date)
 
 def split_authors(authors):
     """Produces a list of strings containing the authors' names.
@@ -144,7 +77,7 @@ def split_title(title):
     list2 = [wl.lemmatize(x,pos=y) for (x,y) in list1]                          #lemmatizing each word in list
     return list2
 
-def augment_author(author, words, date):
+def augment_author(author, title, words, date):
     """Augments the author profiles given words
 
        Given a dict of an author name and a list of words
@@ -152,17 +85,18 @@ def augment_author(author, words, date):
 
        Args:
            author (string): author name to augment
+           title (string): title of the paper
            words (list): a list of wordds
            date (string): date paper was written
     """
     (profiles, status) = dbh.find_profiles({'name':author}) #find profiles
     author_profile = {}
     if not status:
-        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({})}) #if none, insert new
+        author_profile = dbh.add_new_profile({'name':author, 'keywords':repr({}), 'title':repr([])}) #if none, insert new
     else:
         author_profile = profiles[0]
     
-
+    
     author_words = ast.literal_eval(author_profile['keywords']) #find author's keywords
 
     for word in words:    
@@ -170,10 +104,14 @@ def augment_author(author, words, date):
             author_words[word] = weighting(word, words, date) #add new word
         else:
             author_words[word] += weighting(word, words, date) #augment old word
-
+    
     # x = sorted(author_words.items(), key=lambda t: t[1], reverse=True)   #sorting the words from lowest to highest freq in list
     # author_profile['keywords'] = repr(x) #update the word list in profile (dict converted to string for db)
     author_profile['keywords'] = repr(author_words)
+
+    author_titles = ast.literal_eval(author_profile['title'])
+    author_titles.append(title)
+    author_profile['title'] = repr(author_titles)
     print("AUTHOR_PROFILE_UPDATE", author_profile)
     print()
     dbh.update_profile(author_profile['id'], author_profile) #update row in db 
