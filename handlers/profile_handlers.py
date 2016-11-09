@@ -42,9 +42,10 @@ def submit_query():
         person = '/api/person/{}/'.format(profile['id'])
         profile['research_summary'] = person + 'summary'
         profile['full_profile'] = person + 'full'
+        profile['papers'] = ast.literal_eval(profile['papers'])
     
     # sort results by expertise (for now needs to be extended)
-    expertise = request_json['expertise'] 
+    # expertise = request_json['expertise'] 
     # results = _get_ordered_results(profiles, '', expertise)
 
     # add to query cache for lookup later
@@ -100,8 +101,9 @@ def person_full(person_id):
        returns : json containing the entire profile
     """
     (person, status) = dh.get_profile_by_id(person_id)
+    perso
     if status:
-        return json.dumps(PROFILES[person_id])
+        return json.dumps(person)
     else:
         abort(404)
 
