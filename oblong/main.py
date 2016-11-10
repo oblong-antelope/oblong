@@ -2,6 +2,7 @@
 """Handles command line argument parsing and environment variables."""
 import argparse
 import os
+import psycopg2
 import urlparse
 
 import database
