@@ -2,7 +2,7 @@
 """Handles command line argument parsing and environment variables."""
 import argparse
 import os
-from urllib.parse import urlparse
+import urlparse
 
 import database
 import server
