@@ -88,21 +88,20 @@ def get_keywords(text):
     with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
 
-    # convert tagged words to a format that the lemmatizer understands
-    lemmatizables = [(x, get_lemma_pos(y)) for x, y in tagged_words
-                     if x not in stopwords]
+    # takes only the words that are nouns
+    lemmatizables = [x for x, y in tagged_words if y.startswith('N')]
 
     lemmatizer = WordNetLemmatizer()
-    return [lemmatizer.lemmatize(x, pos=y) for x, y in lemmatizables]
+    return [lemmatizer.lemmatize(x) for x in lemmatizables if x not in stopwords]
 
-def get_lemma_pos(tag):
-    """Magic function, speak to Aran Dhaliwal."""
+'''def get_lemma_pos(tag):
+    """Magic function, speak to Aran Dhaliwal.""" Not needed right now
     mapping = { 'J': 'a'
               , 'V': 'v'
               , 'N': 'n'
               , 'R': 'r'
               }
-    return mapping.get(tag[0], 'n')
+    return mapping.get(tag[0], 'n')'''
 
 def weighting(word, words, date):
     """Weights the importance of a keyword.
