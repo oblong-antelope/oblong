@@ -77,22 +77,45 @@ def get_keywords(text):
         (Sequence[str]): The keywords of the text.
 
     """
-    text = text.replace('-', ' ')
     tokens = [word.lower() for word in word_tokenize(text)]
 
-    # tag words as verb, noun etc to help lemmatizer
+    # tag words as verb, noun etc
     tagged_words = pos_tag(tokens)
 
-    # retreive list of boring words from file
+    # retrieve list of boring words from file
     basedir = os.path.dirname(__file__)
     with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
 
-    # takes only the words that are nouns
-    lemmatizables = [x for x, y in tagged_words if y.startswith('N')]
+    # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
+    patterns = """NP: {<VBG>*?<NN>*}
+                      {<VBG>*?<NNS>*}
+                      {<JJ>*?<NN>*}
+                      {<JJ>*?<NNS>*}
+                      {<JJR>*?<NN>*}
+                      {<JJR>*?<NNS>*}
+                      {<VBD>*?<NN>*}
+                      {<VBD>*?<NNS>*}"""  
+    chunker = nltk.RegexpParser(patterns)
+    chunks = chunker.parse(taggedwords)
+
+    #these are the phrases we want, as lists within a list
+    validphrases = []
+    for t in chunks.subtrees():
+        if t.label() == 'NP':
+            validphrases.append([x for x,y in t.leaves()])
+
+    #turning lists within lists into actual noun phrases i.e [[radiation], [breast,cancer]] becomes [radiation, breast cancer]
+    #sorry for my horrible code
+    #trees suck
+    lemmatizables = []
+    for sublist in validphrases:
+        lemmatizables.append(' '.join(sublist))
 
     lemmatizer = WordNetLemmatizer()
     return [lemmatizer.lemmatize(x) for x in lemmatizables if x not in stopwords]
+
+ 
 
 '''def get_lemma_pos(tag):
     """Magic function, speak to Aran Dhaliwal.""" Not needed right now

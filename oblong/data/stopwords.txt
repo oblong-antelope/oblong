@@ -507,7 +507,8 @@ such
 sufficiently
 suggest
 sup
-sure 	t
+sure
+t
 take
 taken
 taking
