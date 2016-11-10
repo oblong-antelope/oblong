@@ -80,7 +80,7 @@ def get_query(query_id):
                             , 'research_summary': uri_stub + '/summary'
                             , 'full_profile': uri_stub + '/full'
                             })
-        if profiles:
+        if q.status == 'finished':
             result['results'] = profiles
         return json.dumps(result)
 
