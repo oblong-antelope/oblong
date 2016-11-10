@@ -8,7 +8,7 @@ import server
 
 
 DATABASE_URL = os.getenv("OBLONG_DATABASE_URL")
-server.app.logger.info("Using database URL {:s}".format(str(DATABASE_URL)))
+print("Using database URL {:s}".format(str(DATABASE_URL)))
 database.init(DATABASE_URL)
 
 parser = argparse.ArgumentParser(description='Oblong eexpertise mining.')
