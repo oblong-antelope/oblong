@@ -3,4 +3,4 @@ flask-cors
 sqlalchemy>=1.1
 nltk>=3.1
 pygresql>=5.0
-urlparse
+urllib3>=1.19
