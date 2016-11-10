@@ -32,7 +32,7 @@ def fulfill_query(query, name=None, expertise=None):
 
     if expertise:
         keywords = get_keywords(expertise)
-        keywords = '\{"{}"\}'.format('","'.join(keywords))
+        keywords = '{{"{}"}}'.format('","'.join(keywords))
         profiles = profiles.filter(db.Profile.keywords.has_any(keywords))
     
     query.results = profiles.all()
