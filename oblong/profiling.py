@@ -31,7 +31,8 @@ def fulfill_query(query, name=None, expertise=None):
         profiles = profiles.filter(db.Profile.name == name)
 
     if expertise:
-        keywords = get_keywords(expertise)
+        keywords = set(get_keywords(expertise))
+        #keywords = 'array[{}]'.format(', '.join(keywords))
         profiles = profiles.filter(db.Profile.keywords.has_any(keywords))
     
     query.results = profiles.all()
