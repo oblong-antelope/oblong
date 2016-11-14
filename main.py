@@ -4,8 +4,7 @@ import argparse
 import logging
 import os
 
-import database
-import server
+from oblong import database, server
 
 HEROKU_PORT = int(os.getenv('PORT', 5000))
 

@@ -1,1 +1,1 @@
-web: python3 oblong/main.py --host 0.0.0.0 --log-file -
+web: python3 main.py --host 0.0.0.0 --log-file -
