@@ -3,11 +3,11 @@ from os import linesep
 import os.path
 from time import gmtime
 
-from nltk import pos_tag, word_tokenize
+from nltk import pos_tag, word_tokenize, RegexpParser
 from nltk.stem import WordNetLemmatizer
 from sqlalchemy.orm.exc import NoResultFound
 
-import database as db
+from . import database as db
 
 
 def fulfill_query(query, name=None, expertise=None):
@@ -28,12 +28,14 @@ def fulfill_query(query, name=None, expertise=None):
     profiles = db.Profile.query
 
     if name:
-        profiles = profiles.filter(db.Profile.name == name)
+        profiles = profiles.filter_by(name=name)
 
     if expertise:
         keywords = get_keywords(expertise)
-        keywords = '{{"{}"}}'.format('","'.join(keywords))
-        profiles = profiles.filter(db.Profile.keywords.has_any(keywords))
+        for k in keywords:
+            profiles = profiles.filter(db.Profile.keywords_.any(
+                    db.ProfileKeywordAssociation.keyword == k
+                    ))
     
     query.results = profiles.all()
     query.status = "finished"
@@ -51,11 +53,7 @@ def update_authors_profiles(title, author_names, date):
     """
     keywords = get_keywords(title)
     for name in author_names:
-        try:
-            profile = db.Profile.query.filter(db.Profile.name == name).one()
-        except NoResultFound:
-            profile = db.Profile(name=name, keywords={}, papers=[], awards=[])
-            db.session.add(profile)
+        profile, _ = db.get_one_or_create(db.Profile, name=name)
         
         for word in keywords:
             if word not in profile.keywords:
@@ -96,8 +94,8 @@ def get_keywords(text):
                       {<JJR>*?<NNS>*}
                       {<VBD>*?<NN>*}
                       {<VBD>*?<NNS>*}"""  
-    chunker = nltk.RegexpParser(patterns)
-    chunks = chunker.parse(taggedwords)
+    chunker = RegexpParser(patterns)
+    chunks = chunker.parse(tagged_words)
 
     #these are the phrases we want, as lists within a list
     validphrases = []
