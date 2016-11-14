@@ -6,8 +6,8 @@ import os
 from flask import Flask, abort, request
 from flask_cors import CORS
 
-import database as db
-import profiling
+from . import database as db
+from . import profiling
 
 
 # Init Flask App
@@ -102,11 +102,11 @@ def person_summary(person_id):
         abort(404)
     else:
         uri_stub = '/api/profile/{id:d}'.format(id=profile.id)
-        result = { 'papers': len(profile.papers)
+        result = { 'papers': len(profile.papers) if profile.papers else 0
                  , 'keywords': sorted(list(profile.keywords.keys()))
-                 , 'recent_paper': profile.papers[0]
                  , 'full_profile': uri_stub + '/full'
                  }
+        if profile.papers: result['recent_paper'] = profile.papers[0] 
         return json.dumps(result)
 
 @app.route('/api/person/<person_id>/full')
@@ -126,9 +126,27 @@ def person_full(person_id):
         abort(404)
     else:
         result = { 'name': profile.name
-                 , 'keywords': profile.keywords
+                 , 'keywords': dict(profile.keywords)
                  , 'papers': profile.papers
                  , 'awards': profile.awards
+                 }
+        return json.dumps(result)
+
+@app.route('/api/keywords/<keyword>')
+def get_keyword(keyword):
+    keyword = db.Keyword.query.filter_by(name=keyword).one_or_none()
+    if not keyword:
+        abort(404)
+    else:
+        profiles = []
+        for profile in keyword.profiles:
+            uri_stub = '/api/person/{id:d}'.format(id=profile.id)
+            profiles.append({ 'name': profile.name
+                            , 'research_summary': uri_stub + '/summary'
+                            , 'full_profile': uri_stub + '/full'
+                            })
+        result = { 'name': keyword.name
+                 , 'profiles': profiles
                  }
         return json.dumps(result)
 
