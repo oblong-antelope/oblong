@@ -19,12 +19,12 @@ Examples:
 
     Retrieve profiles:
 
-    >>> session.query(Profile).filter(Profile.name == 'John').all()
-    [<Profile ... John>]
-    >>> Profile.query.filter(Profile.name == 'John').all()
-    [<Profile ... John>]
-    >>> Profile.query.filter(Profile.keywords.has_key('hello')).all()
-    [<Profile ... John>]
+    >>> session.query(Profile).filter_by(name='John').all()
+    [<Profile id=... name=John>]
+    >>> Profile.query.filter_by(name='John').all()
+    [<Profile id=... name=John>]
+    >>> Keyword.query.filter_by(name='hello').one_or_none()
+    <Keyword id=... name=hello>
 
     Change a profile:
 
@@ -41,11 +41,15 @@ Examples:
     >>> session.commit()
 
 """
-from sqlalchemy import (create_engine, Table, Column,
-    Enum, Integer, Text, ForeignKey)
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy import (create_engine, Table, Column, 
+        ARRAY, Enum, Integer, Float, Text, String, ForeignKey)
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.mutable import MutableDict, MutableList
+#from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
+from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 __author__ = 'Blaine Rogers <br1314@ic.ac.uk>'
@@ -66,18 +70,91 @@ query_association = Table(
     Column('profile_id', Integer, ForeignKey('profile.id'))
 )
 
+def get_one_or_create(model, create_method='', create_method_kwargs=None, 
+        **kwargs):
+    """Attempts to get an object, or creates one if it doesn't exist.
+
+    Code is cribbed from `here`_.
+
+    Args:
+        model (Base): The model to query.
+        create_method (Callable): A method on the model that, when 
+            supplied with the union of ``kwargs`` and 
+            ``create_method_kwargs``, creates a new instance of the 
+            model.
+        create_method_kwargs (Dict[str, Any]): A dictionary that will
+            be supplied along with ``kwargs`` to the ``create_method``.
+        **kwargs: These arguements will be supplied to
+            ``session.query(model).filter_by`` to select an instance of
+            the model if one exists. If not, these will be passed to
+            the ``create_method`` along with ``create_method_kwargs``.
+
+    Returns:
+        (model, bool) an instance of the model that matches the query,
+        such that if one doesn't exist in the database it is created,
+        and a boolean representing whether or not the object already
+        existed.
+
+    .. _here: http://skien.cc/blog/2014/02/06/sqlalchemy-and-race-conditions-follow-up/
+    
+    """
+    try:
+        return session.query(model).filter_by(**kwargs).one(), True
+    except NoResultFound:
+        kwargs.update(create_method_kwargs or {})
+        created = getattr(model, create_method, model)(**kwargs)
+        try:
+            session.add(created)
+            session.flush()
+            return created, False
+        except IntegrityError:
+            session.rollback()
+            return session.query(model).filter_by(**kwargs).one(), True
+
+class ProfileKeywordAssociation(Base):
+    __tablename__ = 'profile_keyword_association'
+    left_id = Column(Integer, ForeignKey('profile.id'), primary_key=True)
+    right_id = Column(Integer, ForeignKey('keyword.id'), primary_key=True)
+    weight = Column(Float)
+
+    profile = relationship('Profile', 
+            backref=backref(
+                'keywords_',
+                collection_class=attribute_mapped_collection('keyword'),
+                cascade='all, delete-orphan'
+                )
+            )
+    keyword_ = relationship('Keyword', back_populates='profiles_')
+    keyword = association_proxy('keyword_', 'name',
+            creator=lambda name: get_one_or_create(Keyword, name=name)[0])
+
 class Profile(Base):
     """Table to contain user profiles."""
     __tablename__ = 'profile'
     id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    keywords = Column(MutableDict.as_mutable(JSONB))
-    papers = Column(JSON)
-    awards = Column(JSON)
+    name = Column(Text, unique=True)
+    #kw_associations = relationship(ProfileKeywordAssociation)
+    #keywords = relationship(ProfileKeywordAssociation, back_populates='profile')
+    keywords = association_proxy('keywords_', 'weight',
+            creator=lambda k, v: ProfileKeywordAssociation(keyword=k, weight=v)
+            )
+    papers = Column(ARRAY(Text), default=[])
+    awards = Column(ARRAY(Text), default=[])
 
     def __repr__(self):
-        return ('<Profile {id:d} {name:s}>'
-                .format(id=self.id, name=self.name))
+        return '<Profile id={} name={}>'.format(self.id, self.name)
+
+class Keyword(Base):
+    """Table to contain keywords for profile lookup."""
+    __tablename__ = 'keyword'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(64), unique=True)
+    profiles_ = relationship(ProfileKeywordAssociation)
+    profiles = association_proxy('profiles_', 'profile',
+            creator=None)
+
+    def __repr__(self):
+        return '<Keyword id={} name={}>'.format(self.id, self.name)
 
 class Query(Base):
     """Table to contain queries."""
@@ -87,8 +164,7 @@ class Query(Base):
     results = relationship(Profile, secondary=query_association)
 
     def __repr__(self):
-        return ('<Query {id:d} {status:s}>'
-                .format(id=self.id, status=self.status))
+        return '<Keyword id={} status={}>'.format(self.id, self.status)
 
 def init(connection_url):
     """Intialises the module by setting up an engine and session.
