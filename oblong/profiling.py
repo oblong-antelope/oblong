@@ -86,9 +86,13 @@ def get_keywords(text):
         stopwords = [line.rstrip(linesep) for line in f]
 
     # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
-    patterns = """NP: {<JJR>*<NNS>*}
+    patterns = """NP: {<JJ><NN><NNS>}
+                      {<NN><NNS>} 
+                      {<JJ><NNS>}
+                      {<JJR><NNS>}
                       {<JJ>*<NN>*}
-                      {<NN>*}"""  
+                      {<NN>*}
+                      {<NNS>*}""" 
     chunker = RegexpParser(patterns)
     chunks = chunker.parse(tagged_words)
 
