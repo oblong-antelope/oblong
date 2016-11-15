@@ -122,6 +122,7 @@ could
 couldnt
 d
 date
+debate
 did
 didn't
 different
@@ -409,6 +410,7 @@ previously
 primarily
 probably
 promptly
+property
 proud
 provides
 put
