@@ -86,14 +86,14 @@ def get_keywords(text):
         stopwords = [line.rstrip(linesep) for line in f]
 
     # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
-    patterns = """NP: {<VBG>*?<NN>*}
-                      {<VBG>*?<NNS>*}
-                      {<JJ>*?<NN>*}
-                      {<JJ>*?<NNS>*}
-                      {<JJR>*?<NN>*}
-                      {<JJR>*?<NNS>*}
-                      {<VBD>*?<NN>*}
-                      {<VBD>*?<NNS>*}"""  
+    patterns = """NP: {<JJ>*<NN><NNS>}
+                      {<JJR><NNS>}
+                      {<JJ>*<NNS>}
+                      {<NN><NNS>} 
+                      {<JJ><NNS>}
+                      {<JJ>*<NN>*}
+                      {<NN>*}
+                      {<NNS>*}"""
     chunker = RegexpParser(patterns)
     chunks = chunker.parse(tagged_words)
 
@@ -111,7 +111,14 @@ def get_keywords(text):
         lemmatizables.append(' '.join(sublist))
 
     lemmatizer = WordNetLemmatizer()
-    return [lemmatizer.lemmatize(x) for x in lemmatizables if x not in stopwords]
+    lems = lemmatizer.lemmatize(x) for x in lemmatizables]
+
+    #removing stopwords after lemmatizing
+    for lem in lems:
+        if lem in stopwords:
+            lems.remove(lem)
+
+    return lems
 
  
 
