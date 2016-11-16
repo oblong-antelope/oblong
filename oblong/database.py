@@ -46,7 +46,7 @@ from sqlalchemy import (create_engine, Table, Column,
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
-#from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -138,8 +138,8 @@ class Profile(Base):
     keywords = association_proxy('keywords_', 'weight',
             creator=lambda k, v: ProfileKeywordAssociation(keyword=k, weight=v)
             )
-    papers = Column(ARRAY(Text), default=[])
-    awards = Column(ARRAY(Text), default=[])
+    papers = Column(MutableList.as_mutable(ARRAY(Text)), default=[])
+    awards = Column(MutableList.as_mutable(ARRAY(Text)), default=[])
 
     def __repr__(self):
         return '<Profile id={} name={}>'.format(self.id, self.name)
