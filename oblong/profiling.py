@@ -111,12 +111,10 @@ def get_keywords(text):
         lemmatizables.append(' '.join(sublist))
 
     lemmatizer = WordNetLemmatizer()
-    lems = lemmatizer.lemmatize(x) for x in lemmatizables]
+    lems = [lemmatizer.lemmatize(x) for x in lemmatizables]
 
     #removing stopwords after lemmatizing
-    for lem in lems:
-        if lem in stopwords:
-            lems.remove(lem)
+    lems = filter(lambda lem: lem not in stopwords, lems)
 
     return lems
 
