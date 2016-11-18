@@ -9,6 +9,9 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from . import database as db
 
+from ontology import *
+
+onto = Ontology() #import the ACM ontology
 
 def fulfill_query(query, name=None, expertise=None):
     """Fulfills a query by searching the database.
@@ -54,11 +57,17 @@ def update_authors_profiles(title, author_names, date):
     keywords = get_keywords(title)
     for name in author_names:
         profile, _ = db.get_one_or_create(db.Profile, name=name)
+
+        #create lists of concepts from the ontology
+        keyword_classes = [onto.find_superclasses(w) for w in keywords]
         
-        for word in keywords:
-            if word not in profile.keywords:
-                profile.keywords[word] = 0
-            profile.keywords[word] += weighting(word, keywords, date)
+        for kw_class in keyword_classes:
+            dist = 0
+            for word in kw_class:
+                if word not in profile.keywords:
+                    profile.keywords[word] = 0
+                profile.keywords[word] += weighting(word, keywords, date, dist)
+                dist += 1
 
         profile.papers.append(title)
     db.session.commit()
@@ -129,34 +138,44 @@ def get_keywords(text):
               }
     return mapping.get(tag[0], 'n')'''
 
-def weighting(word, words, date):
+def weighting(word, words, date, distance=0):
     """Weights the importance of a keyword.
 
-    The function used currently is linear deprecation up to a time gap
-    of fifty years.
+    The functions used currently are linear deprecation up to a time gap
+    of fifty years and ontology distance of ten layers.
 
     Parameters:
-        FUNC (Callable[[int], Number]): Function to produce a weighting
+        FUNC_D (Callable[[int], Number]): Function to produce a weighting
             given time diff in years.
-        CUTOFF (int): lowest time diff after which the lowest weighting
+        CUTOFF_D (int): lowest time diff after which the lowest weighting
             will be given.
-        BASE (Number): the lowest possible weighting.
+        BASE_D (Number): the lowest possible weighting (time diff).
+        FUNC_DS (Callable[[int], Number]): Function to produce a weighting
+            given distance in levels of the ontology.
+        CUTOFF_DS (int): lowest distance after which the lowest weighting
+            will be given.
+        BASE_DS (Number): the lowest possible weighting (distance).
 
     Args:
         word (str): The word to weight.
         words (Sequence[str]): All keywords in the text.
         date (str): Date the paper was written, in XML format.
+        distance (int): The distance of this concept from the original.
 
     Returns:
         (int): a number representing how important this occurence of
         the word is.
 
     """
-    def FUNC(d): return -.09 * d + 5
-    CUTOFF = 50
-    BASE = .5
+    CUTOFF_D = 50
+    BASE_D = .5
+    def FUNC_D(d): return -.09 * d + 5 if f <= CUTOFF_D else BASE_D
+
+    CUTOFF_DS = 10
+    BASE_DS = .5
+    def FUNC_DS(d): return -.45 * d + 5 if f <= CUTOFF_DS else BASE_DS
 
     year = int(date[:4])
     current_year = gmtime()[0]
     time_diff = current_year - year
-    return FUNC(time_diff) if time_diff <= CUTOFF else BASE
+    return FUNC_D(time_diff) + FUNC_DS(distance)
