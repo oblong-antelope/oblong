@@ -102,8 +102,14 @@ def person_summary(person_id):
         abort(404)
     else:
         uri_stub = '/api/profile/{id:d}'.format(id=profile.id)
+
+        # take up to five of the highest-ranked keywords
+        keywords = sorted(tuple(profile.keywords.items()),
+                          key=lambda p: p[1], reverse=True)[:5]
+        keywords = tuple(zip(*keywords))[0]
+
         result = { 'papers': len(profile.papers) if profile.papers else 0
-                 , 'keywords': sorted(list(profile.keywords.keys()))
+                 , 'keywords': keywords
                  , 'full_profile': uri_stub + '/full'
                  }
         if profile.papers: result['recent_paper'] = profile.papers[0] 
