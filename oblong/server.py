@@ -101,7 +101,7 @@ def person_summary(person_id):
     if not profile:
         abort(404)
     else:
-        uri_stub = '/api/profile/{id:d}'.format(id=profile.id)
+        uri_stub = '/api/person/{id:d}'.format(id=profile.id)
 
         # take up to five of the highest-ranked keywords
         keywords = sorted(tuple(profile.keywords.items()),
@@ -161,9 +161,12 @@ def get_keyword(keyword):
 def submit_data():
     if request.is_json:
         paper = request.get_json()
+        authors = ['{} {}'.format(author['name']['first'], 
+                                  author['name']['last'])
+                   for author in paper["authors"]]
         profiling.update_authors_profiles(
                 paper['title'], 
-                paper['authors'], 
+                authors, 
                 paper['date']) 
         response = { 'success': True }
         return json.dumps(response), 201
