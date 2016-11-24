@@ -3,7 +3,7 @@ from collections import defaultdict
 import json
 import os
 
-from flask import Flask, abort, request
+from flask import Flask, abort, request, url_for
 from flask_cors import CORS
 
 from . import database as db
@@ -16,13 +16,38 @@ app = Flask(__name__)
 # Add CORS headers to all responses/ requests
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+
+def top_keywords(profile):
+    # take up to five of the highest-ranked keywords
+    keywords = sorted(tuple(profile.keywords.items()),
+                      key=lambda p: p[1], reverse=True)[:5]
+    return tuple(zip(*keywords))[0]
+
+
 # ------------ PROFILE API ROUTES -----------------
 @app.route('/api/query/submit', methods=['POST'])
-def submit_query():
+def _submit_query():
+    return "This endpoint is obsolete. Use POST:/api/queries", 404
+
+@app.route('/api/query/<uid>')
+def _get_query(uid):
+    return "This endpoint is obsolete. Use /api/queries/<uid>.", 404
+
+@app.route('/api/person/<person_id>/summary')
+def _person_summary(person_id):
+    return "This end point is obsolete. Use /api/people/<uid>.", 404
+
+@app.route('/api/person/<person_id>/full')
+def _person_full(person_id):
+    return "This end point is obsolete. Use /api/people/<uid>.", 404
+
+
+@app.route('/api/queries', methods=['POST'])
+def queries():
     """Submits a query.
     
     When a query is made, a query object is created, accessible via
-    ``/api/query/<query_id>``. Then the profile database is searched
+    ``/api/queries/<uid>``. Then the profile database is searched
     and a list of results is hosted at that endpoint.
 
     Currently, this method only searches for users by name, and only
@@ -50,12 +75,12 @@ def submit_query():
     profiling.fulfill_query(q, request_json['name'], request_json['expertise'])
         
     response = { 'success': True
-               , 'results': '/api/query/{}'.format(q.id)
+               , 'results': url_for('query', uid=q.id)
                }
     return json.dumps(response), 202
 
-@app.route('/api/query/<query_id>')
-def get_query(query_id):
+@app.route('/api/queries/<uid>')
+def query(uid):
     """Retreives a query from the database.
     
     The response will be a JSON object ``r`` such that ``r["status"]``
@@ -65,116 +90,153 @@ def get_query(query_id):
     query.
 
     Args:
-        query_id (str): The unique id of the query to be retrieved.
+        uid (str): The unique id of the query to be retrieved.
 
     """
-    q = db.Query.query.get(query_id)
+    q = db.Query.query.get(uid)
     if not q:
         abort(404)
     else:
         result = {'status': q.status}
-        profiles = []
-        for profile in q.results:
-            uri_stub = '/api/person/{id:d}'.format(id=profile.id)
-            profiles.append({ 'name': profile.name
-                            , 'research_summary': uri_stub + '/summary'
-                            , 'full_profile': uri_stub + '/full'
-                            })
         if q.status == 'finished':
-            result['results'] = profiles
+            result['results'] = [{ 'name': profile.name
+                                 , 'faculty': profile.faculty
+                                 , 'department': profile.department
+                                 , 'keywords': top_keywords(profile)
+                                 , 'link': url_for('profile', uid=profile.id)
+                                 } for profile in q.results]
         return json.dumps(result)
 
-@app.route('/api/person/<person_id>/summary')
-def person_summary(person_id):
-    """Retrieves a summary of a person's research.
-    
-    The return summary contains the number of papers, keywords (as a
-    list without frequency data), the title of a recent paper and a 
-    link to the full profile.
+@app.route('/api/people')
+def profiles():
+    page = request.args.get('page', 0)
+    size = request.args.get('page_size', 25)
 
-    Args:
-        person_id (str): The unique id of the person to retrieve a
-            profile summary of.
-
-    """
-    profile = db.Profile.query.get(person_id)
-    if not profile:
-        abort(404)
+    count = db.Profile.query.count()
+    if not count:
+        return json.dumps({"count": count})
     else:
-        uri_stub = '/api/person/{id:d}'.format(id=profile.id)
+        profiles = db.Profile.query.slice(page * size, (page + 1) * size)
+        result = { 'count': count }
+        if page > 0:
+            result['previous_page'] = url_for('profiles', page=page - 1,
+                                              page_size=size)
+        if (page + 1) * size < count:
+            result['next_page'] = url_for('profiles', page=page + 1,
+                                          page_size=size)
 
-        # take up to five of the highest-ranked keywords
-        keywords = sorted(tuple(profile.keywords.items()),
-                          key=lambda p: p[1], reverse=True)[:5]
-        keywords = tuple(zip(*keywords))[0]
+        result['this_page'] = [{ 'name': profile.name
+                               , 'faculty': profile.faculty
+                               , 'department': profile.department
+                               , 'keywords': top_keywords(profile)
+                               , 'link': url_for('profile', uid=profile.id)
+                               } for profile in profiles]
 
-        result = { 'papers': len(profile.papers) if profile.papers else 0
-                 , 'keywords': keywords
-                 , 'full_profile': uri_stub + '/full'
-                 }
-        if profile.papers: result['recent_paper'] = profile.papers[0] 
         return json.dumps(result)
 
-@app.route('/api/person/<person_id>/full')
-def person_full(person_id):
+@app.route('/api/people/<uid>')
+def profile(uid):
     """Retrieves the full profile of a person.
 
     The full profile contains name, keywords as a dictionary of words
-    to frequencies, a list of paper titles and a list of awards.
+    to frequencies, a list of publications and so on and so forth.
 
     Args:
-        person_id (str): The unique id of the person to retrieve a
-            profile summary of.
+        uid (str): The unique id of the person.
 
     """
-    profile = db.Profile.query.get(person_id)
+    profile = db.Profile.query.get(uid)
     if not profile:
         abort(404)
     else:
-        result = { 'name': profile.name
-                 , 'keywords': dict(profile.keywords)
-                 , 'papers': profile.papers
-                 , 'awards': profile.awards
-                 }
+        result = {}
+        for attribute in ['name', 'email', 'faculty', 'department', 'campus',
+                'building', 'room', 'website']:
+            result[attribute] = getattr(profile, attribute)
+
+        result['keywords'] = dict(profile.keywords)
+
+        result['publications'] = [url_for('publication', uid=pub.id) for pub in 
+                                  profile.publications]
+
         return json.dumps(result)
 
 @app.route('/api/keywords/<keyword>')
-def get_keyword(keyword):
+def keyword(keyword):
     keyword = db.Keyword.query.filter_by(name=keyword).one_or_none()
     if not keyword:
         abort(404)
     else:
-        profiles = []
-        for profile in keyword.profiles:
-            uri_stub = '/api/person/{id:d}'.format(id=profile.id)
-            profiles.append({ 'name': profile.name
-                            , 'research_summary': uri_stub + '/summary'
-                            , 'full_profile': uri_stub + '/full'
-                            })
         result = { 'name': keyword.name
-                 , 'profiles': profiles
+                 , 'profiles': [{ 'name': profile.name
+                                , 'faculty': profile.faculty
+                                , 'department': profile.department
+                                , 'link': url_for('profile', uid=profile.id)
+                                } for profile in keyword.profiles]
                  }
         return json.dumps(result)
 
-# ------------ SCRAPER API ROUTES -----------------
-@app.route('/api/submit_paper', methods=['POST'])
-def submit_data():
-    if request.is_json:
-        paper = request.get_json()
-        authors = ['{} {}'.format(author['name']['first'], 
-                                  author['name']['last'])
-                   for author in paper["authors"]]
-        profiling.update_authors_profiles(
-                paper['title'], 
-                authors, 
-                paper['date']) 
-        response = { 'success': True }
-        return json.dumps(response), 201
+@app.route('/api/publications', methods=['GET', 'POST'])
+def publications():
+    if request.method == 'GET':
+        page = request.args.get('page', 0)
+        size = request.args.get('page_size', 25)
+
+        count = db.Publication.query.count()
+        if not count:
+            return json.dumps({"count": count})
+        else:
+            result = { 'count': count }
+            if page > 0:
+                result['previous_page'] = url_for('profiles', page=page - 1,
+                                                  page_size=size)
+            if (page + 1) * size < count:
+                result['next_page'] = url_for('profiles', page=page + 1,
+                                              page_size=size)
+
+            pubs = db.Publication.query.slice(page * size, (page + 1) * size)
+            result['this_page'] = [{ 'title': pub.title
+                                   , 'date': str(pub.date)
+                                   , 'authors': [url_for('profile', uid=a.id)
+                                                 for a in pub.authors]
+                                   , 'link': url_for('publication', uid=pub.id)
+                                   } for pub in pubs]
+
+            return json.dumps(result)
+
+    elif request.method == 'POST':
+        if request.is_json:
+            paper = request.get_json()
+            profiles = profiling.update_authors_profiles(
+                    paper['title'], 
+                    paper['abstract'],
+                    paper['authors'], 
+                    paper['date']) 
+            response = { 'success': True }
+            return json.dumps(response), 201
+        else:
+            response = { 'error_code': 415
+                       , 'message': 'JSON, please.' 
+                       }
+            return json.dumps(response), 415
+
+@app.route('/api/publications/<uid>')
+def publication(uid):
+    pub = db.Publication.query.get(uid)
+    if not pub:
+        abort(404)
     else:
-        response = { 'error_code': 415
-                   , 'message': 'JSON, please.' 
-                   }
-        return json.dumps(response), 415
+        result = { 'title': pub.title
+                 , 'abstract': pub.abstract
+                 , 'date': str(pub.date)
+                 , 'authors': [{ 'name': author.name
+                               , 'faculty': author.faculty
+                               , 'department': author.department
+                               , 'keywords': top_keywords(author)
+                               , 'link': url_for('profile', uid=author.id)
+                               } for author in pub.authors]
+                 }
+        return json.dumps(result)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
