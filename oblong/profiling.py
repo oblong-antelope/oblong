@@ -1,4 +1,5 @@
 """Algorithms that profile users based on paper metadata."""
+import datetime
 from os import linesep
 import os.path
 from time import gmtime
@@ -41,26 +42,45 @@ def fulfill_query(query, name=None, expertise=None):
     query.status = "finished"
     db.session.commit()
 
-def update_authors_profiles(title, author_names, date):
+def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
 
     Args:
         title (str): The title of the new paper.
-        author_names (Sequence[str]): The names of the authors of the
-            new paper.
+        authors: Data about the authors of the paper.
         date (str): The date of the new paper in XML datetime format.
 
     """
-    keywords = get_keywords(title)
-    for name in author_names:
-        profile, _ = db.get_one_or_create(db.Profile, name=name)
+    #date = datetime.date(int(date[:4]), int(date[5:7]), int(date[8:10]))
+    publication, _ = db.get_one_or_create(db.Publication, 
+            create_method_kwargs={ 'abstract': abstract, 'date': date },
+            title=title)
+
+    keywords = list(get_keywords(title)) + list(get_keywords(abstract))
+    weightings = dict((w, weighting(w, keywords, date)) for w in keywords)
+
+    for author in authors:
+        profile, _ = db.get_one_or_create(db.Profile, 
+                create_method_kwargs={ 'title': author['name']['title']
+                                     , 'initials': author['name']['initials']
+                                     , 'alias': author['name']['alias']
+                                     , 'email': author['email']
+                                     , 'department': author['department']
+                                     , 'campus': author['campus']
+                                     , 'building': author['building']
+                                     , 'room': author['room']
+                                     , 'website': author['website']
+                                     },
+                firstname=author['name']['first'],
+                lastname=author['name']['last'],
+                faculty=author['faculty'])
         
         for word in keywords:
             if word not in profile.keywords:
                 profile.keywords[word] = 0
-            profile.keywords[word] += weighting(word, keywords, date)
+            profile.keywords[word] += weightings[word]
 
-        profile.papers.append(title)
+        profile.publications.append(publication)
     db.session.commit()
 
 def get_keywords(text):
@@ -117,8 +137,6 @@ def get_keywords(text):
     lems = filter(lambda lem: lem not in stopwords, lems)
 
     return lems
-
- 
 
 '''def get_lemma_pos(tag):
     """Magic function, speak to Aran Dhaliwal.""" Not needed right now
