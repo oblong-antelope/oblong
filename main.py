@@ -4,11 +4,11 @@ import argparse
 import logging
 import os
 
-from oblong import database, server
+import oblong
 
 HEROKU_PORT = int(os.getenv('PORT', 5000))
 
-database.init(os.getenv("DATABASE_URL"))
+oblong.init(os.getenv("DATABASE_URL"))
 
 parser = argparse.ArgumentParser(description='Oblong eexpertise mining.')
 parser.add_argument('--host', metavar='IP', default='localhost',
@@ -27,4 +27,4 @@ if args.log_file:
     kwargs['filename'] = args.log_file
 logging.basicConfig(**kwargs)
 
-server.app.run(host=args.host, port=args.port)
+oblong.run(host=args.host, port=args.port)
