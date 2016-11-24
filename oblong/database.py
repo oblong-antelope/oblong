@@ -42,7 +42,7 @@ Examples:
 
 """
 from sqlalchemy import (create_engine, Table, Column, 
-        ARRAY, Enum, Integer, Float, Text, String, ForeignKey)
+        Enum, Integer, Float, Text, String, Date, ForeignKey)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -62,13 +62,6 @@ session = None
 Base = declarative_base()
 #: Enumeration type for query status.
 Status = Enum("in_progress", "finished", "deleted", name="Status")
-
-#: Association table for many-to-many link between queries and profiles.
-query_association = Table(
-    'query_association', Base.metadata,
-    Column('query_id', Integer, ForeignKey('queries.id')),
-    Column('profile_id', Integer, ForeignKey('profile.id'))
-)
 
 def get_one_or_create(model, create_method='', create_method_kwargs=None, 
         **kwargs):
@@ -111,6 +104,20 @@ def get_one_or_create(model, create_method='', create_method_kwargs=None,
             session.rollback()
             return session.query(model).filter_by(**kwargs).one(), True
 
+#: Association table for many-to-many link between queries and profiles.
+query_association = Table(
+    'query_association', Base.metadata,
+    Column('query_id', Integer, ForeignKey('queries.id')),
+    Column('profile_id', Integer, ForeignKey('profile.id'))
+)
+
+#: Association table for many-to-many link between papers and profiles.
+profile_publication_association = Table(
+    'profile_publication_association', Base.metadata,
+    Column('profile_id', Integer, ForeignKey('profile.id')),
+    Column('publication_id', Integer, ForeignKey('publication.id'))
+)
+
 class ProfileKeywordAssociation(Base):
     __tablename__ = 'profile_keyword_association'
     left_id = Column(Integer, ForeignKey('profile.id'), primary_key=True)
@@ -132,14 +139,47 @@ class Profile(Base):
     """Table to contain user profiles."""
     __tablename__ = 'profile'
     id = Column(Integer, primary_key=True)
-    name = Column(Text, unique=True)
-    #kw_associations = relationship(ProfileKeywordAssociation)
-    #keywords = relationship(ProfileKeywordAssociation, back_populates='profile')
+    title = Column(String(20))
+    firstname = Column(String(80))
+    lastname = Column(String(80))
+    initials = Column(String(20))
+    alias = Column(String(80))
+    email = Column(String(80))
+    faculty = Column(String(80))
+    department = Column(String(80))
+    campus = Column(String(80))
+    building = Column(String(80))
+    room = Column(String(80))
+    website = Column(String(160))
+
     keywords = association_proxy('keywords_', 'weight',
             creator=lambda k, v: ProfileKeywordAssociation(keyword=k, weight=v)
             )
-    papers = Column(MutableList.as_mutable(ARRAY(Text)), default=[])
-    awards = Column(MutableList.as_mutable(ARRAY(Text)), default=[])
+    publications = relationship('Publication',
+            secondary=profile_publication_association,
+            back_populates='authors')
+
+    @property
+    def name(self):
+        return { 'title': self.title
+               , 'first': self.firstname
+               , 'last': self.lastname
+               , 'initials': self.initials
+               , 'alias': self.alias
+               }
+
+    @name.setter
+    def name(self, value):
+        if hasattr(value, '__getitem__'):
+            self.title = value['title']
+            self.firstname = value['first']
+            self.lastname = value['last']
+            self.initials = value['initials']
+            self.alias = value['alias']
+        elif isinstance(value, str):
+            raise ValueError('String name parsing not yet implemented.')
+        else:
+            raise ValueError('name must be dict or string')
 
     def __repr__(self):
         return '<Profile id={} name={}>'.format(self.id, self.name)
@@ -165,6 +205,20 @@ class Query(Base):
 
     def __repr__(self):
         return '<Keyword id={} status={}>'.format(self.id, self.status)
+
+class Publication(Base):
+    __tablename__ = 'publication'
+    id = Column(Integer, primary_key=True)
+    title = Column(Text)
+    abstract = Column(Text)
+    date = Column(Date)
+    authors = relationship('Profile',
+            secondary=profile_publication_association,
+            back_populates='publications')
+
+    def __repr__(self):
+        title = self.title if len(self.title) > 20 else self.title[:17] + '...'
+        return '<Publication id={} title={}>'.format(self.id, title)
 
 def init(connection_url):
     """Intialises the module by setting up an engine and session.
