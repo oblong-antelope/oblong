@@ -56,7 +56,9 @@ def update_authors_profiles(title, abstract, authors, date):
             create_method_kwargs={ 'abstract': abstract, 'date': date },
             title=title)
 
-    keywords = list(get_keywords(title)) + list(get_keywords(abstract))
+    keywords = list(get_keywords(title))
+    if abstract:
+        keywords += list(get_keywords(abstract))
     weightings = dict((w, weighting(w, keywords, date)) for w in keywords)
 
     for author in authors:
