@@ -101,8 +101,14 @@ def query(uid):
 
 @app.route('/api/people')
 def profiles():
-    page = request.args.get('page', 0)
-    size = request.args.get('page_size', 25)
+    try:
+        page = int(request.args.get('page', 0))
+        size = int(request.args.get('page_size', 25))
+    except ValueError:
+        response = { 'error_code': 415
+                   , 'message': 'page and page_size must be uint' 
+                   }
+        return json.dumps(response), 415
 
     count = db.Profile.query.count()
     if not count:
@@ -172,8 +178,14 @@ def keyword(keyword):
 @app.route('/api/publications', methods=['GET', 'POST'])
 def publications():
     if request.method == 'GET':
-        page = request.args.get('page', 0)
-        size = request.args.get('page_size', 25)
+        try:
+            page = int(request.args.get('page', 0))
+            size = int(request.args.get('page_size', 25))
+        except ValueError:
+            response = { 'error_code': 415
+                       , 'message': 'page and page_size must be uint' 
+                       }
+            return json.dumps(response), 415
 
         count = db.Publication.query.count()
         if not count:
