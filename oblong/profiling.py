@@ -22,12 +22,16 @@ def fulfill_query(query, text):
     """
     profiles = db.Profile.query
 
+    print("text of query: ", text)
+
     keywords = get_keywords(text)
     for k in keywords:
         profiles = profiles.filter(db.Profile.keywords_.any(
                 db.ProfileKeywordAssociation.keyword == k
                 ))
     
+    lo
+
     query.results = profiles.all()
     query.status = "finished"
     db.session.commit()
