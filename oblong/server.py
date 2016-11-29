@@ -193,10 +193,10 @@ def publications():
         else:
             result = { 'count': count }
             if page > 0:
-                result['previous_page'] = url_for('profiles', page=page - 1,
+                result['previous_page'] = url_for('publications', page=page - 1,
                                                   page_size=size)
             if (page + 1) * size < count:
-                result['next_page'] = url_for('profiles', page=page + 1,
+                result['next_page'] = url_for('publications', page=page + 1,
                                               page_size=size)
 
             pubs = db.Publication.query.slice(page * size, (page + 1) * size)
