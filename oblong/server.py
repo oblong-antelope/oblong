@@ -91,6 +91,7 @@ def query(uid):
         result = {'status': q.status}
         if q.status == 'finished':
             result['results'] = [{ 'name': profile.name
+                                 , 'email': profile.email
                                  , 'faculty': profile.faculty
                                  , 'department': profile.department
                                  , 'keywords': top_keywords(profile)
@@ -160,6 +161,7 @@ def keyword(keyword):
     else:
         result = { 'name': keyword.name
                  , 'profiles': [{ 'name': profile.name
+                                , 'email': profile.name
                                 , 'faculty': profile.faculty
                                 , 'department': profile.department
                                 , 'link': url_for('profile', uid=profile.id)
@@ -221,6 +223,7 @@ def publication(uid):
                  , 'abstract': pub.abstract
                  , 'date': str(pub.date)
                  , 'authors': [{ 'name': author.name
+                               , 'email': author.email
                                , 'faculty': author.faculty
                                , 'department': author.department
                                , 'keywords': top_keywords(author)
