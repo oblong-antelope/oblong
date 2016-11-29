@@ -59,20 +59,11 @@ def queries():
     .. _Celery: http://docs.celeryproject.org/
 
     """
-    if request.is_json:
-        request_json = defaultdict(lambda: '')
-        request_json.update(request.get_json())
-    else:
-        response = { 'error_code': 415
-                   , 'message': 'JSON, please.' 
-                   }
-        return json.dumps('JSON, please.'), 415
- 
     q = db.Query(status="in_progress")
     db.session.add(q)
     db.session.commit()
 
-    profiling.fulfill_query(q, request_json['name'], request_json['expertise'])
+    profiling.fulfill_query(q, request.get_data().decode('utf-8'))
         
     response = { 'success': True
                , 'results': url_for('query', uid=q.id)

@@ -11,32 +11,22 @@ from sqlalchemy.orm.exc import NoResultFound
 from . import database as db
 
 
-def fulfill_query(query, name=None, expertise=None):
+def fulfill_query(query, text):
     """Fulfills a query by searching the database.
 
     Args:
         query (database.Query): The query to fulfill.
-        name (str): Only profiles with this name will be returned.
-        expertise (str): This string will be searched for keywords,
+        text (str): This string will be searched for keywords,
             and profiles containing those keywords will be returned.
 
     """
-    if not (name or expertise):
-        query.status = "finished"
-        db.session.commit()
-        return
-
     profiles = db.Profile.query
 
-    if name:
-        profiles = profiles.filter_by(name=name)
-
-    if expertise:
-        keywords = get_keywords(expertise)
-        for k in keywords:
-            profiles = profiles.filter(db.Profile.keywords_.any(
-                    db.ProfileKeywordAssociation.keyword == k
-                    ))
+    keywords = get_keywords(text)
+    for k in keywords:
+        profiles = profiles.filter(db.Profile.keywords_.any(
+                db.ProfileKeywordAssociation.keyword == k
+                ))
     
     query.results = profiles.all()
     query.status = "finished"
