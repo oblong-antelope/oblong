@@ -29,8 +29,6 @@ def fulfill_query(query, text):
         profiles = profiles.filter(db.Profile.keywords_.any(
                 db.ProfileKeywordAssociation.keyword == k
                 ))
-    
-    lo
 
     query.results = profiles.all()
     query.status = "finished"
