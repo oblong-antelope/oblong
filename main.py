@@ -7,8 +7,9 @@ import os
 import oblong
 
 HEROKU_PORT = int(os.getenv('PORT', 5000))
-
-oblong.init(os.getenv("DATABASE_URL"))
+DB_URL = os.getenv("DATABASE_URL")
+print("Connecting to DB: ", DB_URL)
+oblong.init(DB_URL)
 
 parser = argparse.ArgumentParser(description='Oblong eexpertise mining.')
 parser.add_argument('--host', metavar='IP', default='localhost',
