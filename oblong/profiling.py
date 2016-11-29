@@ -1,4 +1,5 @@
 """Algorithms that profile users based on paper metadata."""
+import datetime
 from os import linesep
 import os.path
 from time import gmtime
@@ -13,63 +14,83 @@ from ontology import *
 
 onto = Ontology() #import the ACM ontology
 
-def fulfill_query(query, name=None, expertise=None):
+def fulfill_query(query, text):
     """Fulfills a query by searching the database.
 
     Args:
         query (database.Query): The query to fulfill.
-        name (str): Only profiles with this name will be returned.
-        expertise (str): This string will be searched for keywords,
+        text (str): This string will be searched for keywords,
             and profiles containing those keywords will be returned.
 
     """
-    if not (name or expertise):
-        query.status = "finished"
-        db.session.commit()
-        return
-
     profiles = db.Profile.query
 
-    if name:
-        profiles = profiles.filter_by(name=name)
+    print("text of query: ", text)
 
-    if expertise:
-        keywords = get_keywords(expertise)
-        for k in keywords:
-            profiles = profiles.filter(db.Profile.keywords_.any(
-                    db.ProfileKeywordAssociation.keyword == k
-                    ))
-    
+    keywords = get_keywords(text)
+    for k in keywords:
+        profiles = profiles.filter(db.Profile.keywords_.any(
+                db.ProfileKeywordAssociation.keyword == k
+                ))
+
     query.results = profiles.all()
     query.status = "finished"
     db.session.commit()
 
-def update_authors_profiles(title, author_names, date):
+def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
 
     Args:
         title (str): The title of the new paper.
-        author_names (Sequence[str]): The names of the authors of the
-            new paper.
+        authors: Data about the authors of the paper.
         date (str): The date of the new paper in XML datetime format.
 
     """
-    keywords = get_keywords(title)
-    for name in author_names:
-        profile, _ = db.get_one_or_create(db.Profile, name=name)
+    #date = datetime.date(int(date[:4]), int(date[5:7]), int(date[8:10]))
+    publication, _ = db.get_one_or_create(db.Publication, 
+            create_method_kwargs={ 'abstract': abstract, 'date': date },
+            title=title)
 
-        #create lists of concepts from the ontology
-        keyword_classes = [onto.find_superclasses(w) for w in keywords]
+    keywords = list(get_keywords(title))
+    if abstract:
+        keywords += list(get_keywords(abstract))
+    
+    #create lists of concepts from the ontology
+    keyword_classes = [onto.find_superclasses(w) for w in keywords]
+
+    #create a list of weightings of keywords
+    weightings = {}
+    for kw_class in keyword_classes:
+        dist = 0
+        for word in kw_class:
+            weightings[word] = weighting(word, keywords, date, dist)
+            dist += 1
+
+    keywords = [w for c in keyword_classes for w in c] #flatten keyword_classes
+
+    for author in authors:
+        profile, _ = db.get_one_or_create(db.Profile, 
+                create_method_kwargs={ 'title': author['name']['title']
+                                     , 'initials': author['name']['initials']
+                                     , 'alias': author['name']['alias']
+                                     , 'email': author['email']
+                                     , 'department': author['department']
+                                     , 'campus': author['campus']
+                                     , 'building': author['building']
+                                     , 'room': author['room']
+                                     , 'website': author['website']
+                                     },
+                firstname=author['name']['first'],
+                lastname=author['name']['last'],
+                faculty=author['faculty'])
         
-        for kw_class in keyword_classes:
-            dist = 0
-            for word in kw_class:
-                if word not in profile.keywords:
-                    profile.keywords[word] = 0
-                profile.keywords[word] += weighting(word, keywords, date, dist)
-                dist += 1
+        #update weightings
+        for word in keywords:
+            if word not in profile.keywords:
+                profile.keywords[word] = 0
+            profile.keywords[word] += weightings[word]
 
-        profile.papers.append(title)
+        profile.publications.append(publication)
     db.session.commit()
 
 def get_keywords(text):
@@ -126,8 +147,6 @@ def get_keywords(text):
     lems = filter(lambda lem: lem not in stopwords, lems)
 
     return lems
-
- 
 
 '''def get_lemma_pos(tag):
     """Magic function, speak to Aran Dhaliwal.""" Not needed right now
