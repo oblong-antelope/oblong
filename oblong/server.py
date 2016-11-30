@@ -122,8 +122,9 @@ def profile(uid):
 
         result['keywords'] = dict(profile.keywords)
 
-        result['publications'] = [url_for('publication', uid=pub.id) for pub in 
-                                  profile.publications]
+        result['publications'] = [{ 'title': pub.title
+                                  , 'link': url_for('publication', uid=pub.id) 
+                                  } for pub in profile.publications]
 
         return json.dumps(result)
 
