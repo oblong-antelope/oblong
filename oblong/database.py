@@ -104,13 +104,6 @@ def get_one_or_create(model, create_method='', create_method_kwargs=None,
             session.rollback()
             return session.query(model).filter_by(**kwargs).one(), True
 
-#: Association table for many-to-many link between queries and profiles.
-query_association = Table(
-    'query_association', Base.metadata,
-    Column('query_id', Integer, ForeignKey('queries.id')),
-    Column('profile_id', Integer, ForeignKey('profile.id'))
-)
-
 #: Association table for many-to-many link between papers and profiles.
 profile_publication_association = Table(
     'profile_publication_association', Base.metadata,
@@ -195,16 +188,6 @@ class Keyword(Base):
 
     def __repr__(self):
         return '<Keyword id={} name={}>'.format(self.id, self.name)
-
-class Query(Base):
-    """Table to contain queries."""
-    __tablename__ = 'queries'
-    id = Column(Integer, primary_key=True)
-    status = Column(Status)
-    results = relationship(Profile, secondary=query_association)
-
-    def __repr__(self):
-        return '<Keyword id={} status={}>'.format(self.id, self.status)
 
 class Publication(Base):
     __tablename__ = 'publication'
