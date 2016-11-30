@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from . import database as db
 
-from ontology import *
+from .ontology import *
 
 onto = Ontology() #import the ACM ontology
 
