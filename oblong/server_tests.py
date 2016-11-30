@@ -1,6 +1,6 @@
 import json
 import unittest
-import server
+from . import server
 
 '''class QueryTestCase(unittest.TestCase):
     def setUp(self):
