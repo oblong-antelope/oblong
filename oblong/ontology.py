@@ -4,8 +4,8 @@ import rdflib
 import os.path
 
 #define constants
-ACM_ONTOLOGY = os.path.join(os.path.dirname(__file__), \
-                    "../ACMComputingClassificationSystemSKOSTaxonomy.xml")
+ACM_ONTOLOGY = os.path.join(os.path.dirname(__file__), "data",
+    "ACM_Computing_Ontology.xml")
 SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#"
 
 #define function for creating literals
