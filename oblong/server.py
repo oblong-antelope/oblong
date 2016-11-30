@@ -41,6 +41,10 @@ def _person_summary(person_id):
 def _person_full(person_id):
     return "This end point is obsolete. Use /api/people/<uid>.", 404
 
+@app.route('/api/queries/<uid>')
+def query(uid):
+    return "This end point is obsolete. Use POST:/api/queries", 404
+
 
 @app.route('/api/queries', methods=['POST'])
 def queries():
@@ -50,54 +54,18 @@ def queries():
     ``/api/queries/<uid>``. Then the profile database is searched
     and a list of results is hosted at that endpoint.
 
-    Currently, this method only searches for users by name, and only
-    returns exact matches.
-
-    In the future, this will create a task via something like `Celery`_
-    and dispatch it.
-
-    .. _Celery: http://docs.celeryproject.org/
-
     """
-    q = db.Query(status="in_progress")
-    db.session.add(q)
-    db.session.commit()
-
-    profiling.fulfill_query(q, request.get_data().decode('utf-8'))
+    results = profiling.fulfill_query(request.get_data().decode('utf-8'))
         
-    response = { 'success': True
-               , 'results': url_for('query', uid=q.id)
-               }
-    return json.dumps(response), 202
+    response = [{ 'name': profile.name
+                , 'email': profile.email
+                , 'faculty': profile.faculty
+                , 'department': profile.department
+                , 'keywords': top_keywords(profile)
+                , 'link': url_for('profile', uid=profile.id)
+                } for profile in results]
 
-@app.route('/api/queries/<uid>')
-def query(uid):
-    """Retreives a query from the database.
-    
-    The response will be a JSON object ``r`` such that ``r["status"]``
-    is one of ``"in_progress"``, ``"finished"`` or ``"deleted"``. If 
-    ``r["status"] == "finished"``, then ``r["results"]`` will be a
-    list containing names and profile links for profiles that match the
-    query.
-
-    Args:
-        uid (str): The unique id of the query to be retrieved.
-
-    """
-    q = db.Query.query.get(uid)
-    if not q:
-        abort(404)
-    else:
-        result = {'status': q.status}
-        if q.status == 'finished':
-            result['results'] = [{ 'name': profile.name
-                                 , 'email': profile.email
-                                 , 'faculty': profile.faculty
-                                 , 'department': profile.department
-                                 , 'keywords': top_keywords(profile)
-                                 , 'link': url_for('profile', uid=profile.id)
-                                 } for profile in q.results]
-        return json.dumps(result)
+    return json.dumps(response)
 
 @app.route('/api/people')
 def profiles():
