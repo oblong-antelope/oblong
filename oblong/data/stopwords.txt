@@ -5,7 +5,9 @@
 ?
 !
 (
-)
+>
+[
+]
 "
 "
 a
@@ -101,7 +103,6 @@ briefly
 building
 but
 by
-c
 ca
 came
 can
@@ -200,6 +201,7 @@ goes
 gone
 got
 gotten
+group
 h
 had
 happens
@@ -397,6 +399,7 @@ part
 particular
 particularly
 past
+people
 per
 perhaps
 placed
@@ -517,6 +520,7 @@ t
 take
 taken
 taking
+team
 tell
 tends
 th
