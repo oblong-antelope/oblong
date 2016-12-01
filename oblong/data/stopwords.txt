@@ -1,3 +1,4 @@
+﻿©
 .
 ,
 ;
@@ -5,9 +6,11 @@
 ?
 !
 (
->
+)
 [
 ]
+<
+>
 "
 "
 a
@@ -172,6 +175,8 @@ few
 ff
 fifth
 find
+finding
+findings
 first
 five
 fix
@@ -516,6 +521,8 @@ sufficiently
 suggest
 sup
 sure
+survey
+surverys
 t
 take
 taken

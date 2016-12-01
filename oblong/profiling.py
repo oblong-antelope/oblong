@@ -10,15 +10,14 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from . import database as db
 
-from ontology import *
+from .ontology import *
 
 onto = Ontology() #import the ACM ontology
 
-def fulfill_query(query, text):
+def fulfill_query(text):
     """Fulfills a query by searching the database.
 
     Args:
-        query (database.Query): The query to fulfill.
         text (str): This string will be searched for keywords,
             and profiles containing those keywords will be returned.
 
@@ -28,14 +27,21 @@ def fulfill_query(query, text):
     print("text of query: ", text)
 
     keywords = get_keywords(text)
+    print(keywords)
     for k in keywords:
         profiles = profiles.filter(db.Profile.keywords_.any(
                 db.ProfileKeywordAssociation.keyword == k
                 ))
 
-    query.results = profiles.all()
-    query.status = "finished"
-    db.session.commit()
+    results = profiles.all()
+    def sort_function(profile):
+        for k in keywords:
+            print(dict(profile.keywords))
+        return sum(profile.keywords[k] for k in keywords)
+    for p in results:
+        print(p.firstname, sort_function(p))
+    results.sort(key=sort_function, reverse=True) 
+    return results
 
 def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
@@ -51,9 +57,9 @@ def update_authors_profiles(title, abstract, authors, date):
             create_method_kwargs={ 'abstract': abstract, 'date': date },
             title=title)
 
-    keywords = list(get_keywords(title))
+    keywords = get_keywords(title)
     if abstract:
-        keywords += list(get_keywords(abstract))
+        keywords += get_keywords(abstract)
     
     #create lists of concepts from the ontology
     keyword_classes = [onto.find_superclasses(w) for w in keywords]
@@ -146,7 +152,7 @@ def get_keywords(text):
     #removing stopwords after lemmatizing
     lems = filter(lambda lem: lem not in stopwords, lems)
 
-    return lems
+    return tuple(lems)
 
 '''def get_lemma_pos(tag):
     """Magic function, speak to Aran Dhaliwal.""" Not needed right now
