@@ -49,6 +49,7 @@ an
 and
 announce
 another
+answer
 any
 anybody
 anyhow
@@ -169,6 +170,7 @@ everywhere
 ex
 except
 explanation
+extension
 f
 far
 few
@@ -400,6 +402,7 @@ own
 p
 page
 pages
+paper
 part
 particular
 particularly
