@@ -234,8 +234,12 @@ def update_name_sets():
     """Updates the names, fauclties, departments and campuses sets
     """
     global firstnames, surnames, deps, campuses, facs
-    firstnames = set([w.lower() for w in db.session.query(Profile.firstname).all()])
-    surnames   = set([w.lower() for w in db.session.query(Profile.surname).all()])
-    deps       = set([w.lower() for w in db.session.department.query()])
-    campuses   = set([w.lower() for w in db.session.campus.query()])
-    facs       = set([w.lower() for w in db.session.faculty.query()])
+    records = db.session.query(db.Profile.firstname
+                              ,db.Profile.lastname
+                              ,db.Profile.department
+                              ,db.Profile.campus
+                              ,db.Profile.faculty
+                              ).all()
+
+    firstnames, surnames, deps, campuses, facs =\
+            (set(w.lower() for w in rec) for rec in zip(*records))
