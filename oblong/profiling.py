@@ -11,6 +11,9 @@ from . import database as db
 
 from .ontology import *
 
+BASE_DIR = os.path.dirname(__file__)
+nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
+
 onto = Ontology() #import the ACM ontology
 
 def fulfill_query(text):
@@ -102,8 +105,7 @@ def get_keywords(text):
     tagged_words = pos_tag(tokens)
 
     # retrieve list of boring words from file
-    basedir = os.path.dirname(__file__)
-    with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
+    with open(os.path.join(BASE_DIR, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
     
     #We don't want keywords to contain anything in this list
