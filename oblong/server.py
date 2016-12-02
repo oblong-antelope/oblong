@@ -220,7 +220,7 @@ def submit_keyword(uid):
         submission = request.get_json()
         uid = submission['uid']
         words = submission['words']
-        add_user_keywords(words,uid)
+        profiling.add_user_keywords(words,uid)
         response = { 'success': True }
         return json.dumps(response), 201
     else:
