@@ -5,8 +5,8 @@ python:
 services:
   - postgresql
 
-install: "./setup.py install"
-script: "./setup.py nosetests"
+install: "python setup.py install"
+script: "python setup.py nosetests"
 
 notifications:
   slack: oblong-antelope:1eXsnKpfCiWpdAGGizILVk7j
