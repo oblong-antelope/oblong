@@ -101,7 +101,7 @@ def profiles():
 
         return json.dumps(result)
 
-@app.route('/api/people/<uid>')
+@app.route('/api/people/<int:uid>')
 def profile(uid):
     """Retrieves the full profile of a person.
 
@@ -195,7 +195,7 @@ def publications():
                        }
             return json.dumps(response), 415
 
-@app.route('/api/publications/<uid>')
+@app.route('/api/publications/<int:uid>')
 def publication(uid):
     pub = db.Publication.query.get(uid)
     if not pub:
