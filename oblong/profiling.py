@@ -4,13 +4,16 @@ from os import linesep
 import os.path
 from time import gmtime
 
+import nltk
 from nltk import pos_tag, word_tokenize, RegexpParser
 from nltk.stem import WordNetLemmatizer
-from sqlalchemy.orm.exc import NoResultFound
 
 from . import database as db
 
 from .ontology import *
+
+BASE_DIR = os.path.dirname(__file__)
+nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 
 onto = Ontology() #import the ACM ontology
 
@@ -30,12 +33,7 @@ def fulfill_query(text):
     """
     global names, deps, facs, campuses
 
-    profiles = db.Profile.query
-
-    print("text of query: ", text)
-
     keywords = get_keywords(text)
-    print(keywords)
 
     #check for names in keywords
     name = ''
@@ -45,35 +43,26 @@ def fulfill_query(text):
     for k in keywords:
         if k.lower() in names:
             name = k
-        if k.lower() in deps:
+        elif k.lower() in deps:
             dep = k
-        if k.lower() in campuses:
+        elif k.lower() in campuses:
             camp = k
-        if k.lower() in facs:
+        elif k.lower() in facs:
             fac = k
 
-    if name:
-        profiles = profiles.filter_by(name=name)
-    if camp:
-        profiles = profiles.filter_by(campus=camp)
-    if dep:
-        profiles = profiles.filter_by(department=dep)
-    if fac:
-        profiles = profiles.filter_by(faculty=fac)
+    profiles = db.get_profiles_by_keywords(keywords)
 
-    for k in keywords:
-        profiles = profiles.filter(db.Profile.keywords_.any(
-                db.ProfileKeywordAssociation.keyword == k
-                ))
+    if name:
+        profiles = profiles.filter(db.Profile.name==name)
+    if camp:
+        profiles = profiles.filter(db.Profile.campus==camp)
+    if dep:
+        profiles = profiles.filter(db.Profile.department==dep)
+    if fac:
+        profiles = profiles.filter(db.Profile.faculty==fac)
 
     results = profiles.all()
-    def sort_function(profile):
-        for k in keywords:
-            print(dict(profile.keywords))
-        return sum(profile.keywords[k] for k in keywords)
-    for p in results:
-        print(p.firstname, sort_function(p))
-    results.sort(key=sort_function, reverse=True) 
+
     return results
 
 def update_authors_profiles(title, abstract, authors, date):
@@ -150,9 +139,11 @@ def get_keywords(text):
     tagged_words = pos_tag(tokens)
 
     # retrieve list of boring words from file
-    basedir = os.path.dirname(__file__)
-    with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
+    with open(os.path.join(BASE_DIR, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
+    
+    #We don't want keywords to contain anything in this list
+    forbidden = ['.',',',';',':','?','!',')','[',']','<','>','"','1','2','3','4','5','6','7','8','9','0']
 
     # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
     patterns = """NP: {<JJ>*<NN><NNS>}
@@ -182,19 +173,11 @@ def get_keywords(text):
     lemmatizer = WordNetLemmatizer()
     lems = [lemmatizer.lemmatize(x) for x in lemmatizables]
 
-    #removing stopwords after lemmatizing
+    #removing stopwords after lemmatizinga, then removing anything containing punctuation or a number
     lems = filter(lambda lem: lem not in stopwords, lems)
+    lems = filter(lambda lem: not any(char in lem for char in forbidden), lems)
 
     return tuple(lems)
-
-'''def get_lemma_pos(tag):
-    """Magic function, speak to Aran Dhaliwal.""" Not needed right now
-    mapping = { 'J': 'a'
-              , 'V': 'v'
-              , 'N': 'n'
-              , 'R': 'r'
-              }
-    return mapping.get(tag[0], 'n')'''
 
 def weighting(word, words, date, distance=0):
     """Weights the importance of a keyword.

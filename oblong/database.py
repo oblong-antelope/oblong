@@ -9,29 +9,31 @@ Attributes:
 Examples:
     Intialise the module:
 
-    >>> init("postgresql://postgres:oblong@localhost/postgres")
+    >>> import testing.postgresql
+    >>> postgresql = testing.postgresql.Postgresql()
+    >>> init(postgresql.url())
 
     Create a profile:
 
-    >>> p = Profile(name='John', keywords={'hello': 7, 'world': 1})
+    >>> p = Profile(title='Mr', firstname='John', lastname='Smith',
+    ...             keywords={'hello': 7, 'world': 1})
     >>> session.add(p)
     >>> session.commit()
 
     Retrieve profiles:
 
-    >>> session.query(Profile).filter_by(name='John').all()
-    [<Profile id=... name=John>]
-    >>> Profile.query.filter_by(name='John').all()
-    [<Profile id=... name=John>]
+    >>> session.query(Profile).filter_by(firstname='John').all()
+    [<Profile id=... name=Mr John Smith>]
+    >>> Profile.query.filter_by(firstname='John').all()
+    [<Profile id=... name=Mr John Smith>]
     >>> Keyword.query.filter_by(name='hello').one_or_none()
     <Keyword id=... name=hello>
 
     Change a profile:
 
     >>> p = Profile.query.first()
-    >>> p.name = 'John Smith'
+    >>> p.firstname = 'Harry'
     >>> p.keywords['face'] = 12
-    >>> p.awards.append('An Award')
     >>> session.commit()
 
     Remove a profile:
@@ -40,9 +42,13 @@ Examples:
     >>> session.delete(p)
     >>> session.commit()
 
+    >>> session.remove()
+    >>> postgresql.stop()
+
 """
 from sqlalchemy import (create_engine, Table, Column, 
-        Enum, Integer, Float, Text, String, Date, ForeignKey)
+        Enum, Integer, Float, Text, String, Date, ForeignKey,
+        func, desc)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -175,7 +181,8 @@ class Profile(Base):
             raise ValueError('name must be dict or string')
 
     def __repr__(self):
-        return '<Profile id={} name={}>'.format(self.id, self.name)
+        name = "{} {} {}".format(self.title, self.firstname, self.lastname)
+        return '<Profile id={} name={}>'.format(self.id, name)
 
 class Keyword(Base):
     """Table to contain keywords for profile lookup."""
@@ -228,3 +235,31 @@ def init(connection_url):
                                              bind=engine))
     Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)
+
+def get_profiles_by_keywords(keyword_list):
+    """Gets a list of profiles that have any of the keywords.
+
+    The weighting of a profile is calculated as the sum of the
+    weghtings of the links between the profile and any relevant
+    keywords.
+
+    Args:
+        keyword_list (Sequence[str]): The keywords to search for.
+
+    Returns:
+        (List[Tuple[Profile, float]]): A list of profiles and
+        weightings, sorted by weighting in descending order.
+
+    """
+    weight_sum = (func
+                 .sum(ProfileKeywordAssociation.weight)
+                 .label('weight_sum')
+                 )
+
+    return (session.query(Profile, weight_sum)
+           .join(ProfileKeywordAssociation)
+           .join(Keyword)
+           .filter(Keyword.name.in_(keyword_list))
+           .group_by(Profile.id)
+           .order_by(desc('weight_sum'))
+           )

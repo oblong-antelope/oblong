@@ -2,8 +2,11 @@ language: python
 python:
   - "3.5"
 
-install: "./setup.py install"
-script: nosetests
+services:
+  - postgresql
+
+install: "python setup.py install"
+script: "python setup.py nosetests"
 
 notifications:
   slack: oblong-antelope:1eXsnKpfCiWpdAGGizILVk7j
