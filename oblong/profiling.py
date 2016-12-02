@@ -4,6 +4,7 @@ from os import linesep
 import os.path
 from time import gmtime
 
+import nltk
 from nltk import pos_tag, word_tokenize, RegexpParser
 from nltk.stem import WordNetLemmatizer
 
