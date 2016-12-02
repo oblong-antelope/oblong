@@ -12,4 +12,10 @@ setup( name='oblong'
                         , 'rdflib'
                         ]
      , tests_require=[ 'testing.postgresql' ]
+     , dependency_links=\
+             [ # don't use the version of testing.postgresql in PyPI
+               # because they haven't merged Windows support from here yet
+               ('git+https://github.com/adelosa/testing.postgresql'
+                '@fix-windows-support#egg=testing.postgresql')
+             ]
      )
