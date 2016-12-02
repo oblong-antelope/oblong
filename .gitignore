@@ -93,3 +93,6 @@ ENV/
 
 # json
 *.json
+
+# vim swap files
+*.sw*
