@@ -17,6 +17,37 @@ class DatabaseTestCase(unittest.TestCase):
         db.session.remove()
         self.postgresql.stop()
 
+class KeywordDictTestCase(DatabaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.john = db.Profile(title="Mr", firstname="John", lastname="Smith")
+        self.horse = db.Keyword(name='horse')
+        self.horse_assoc = db.ProfileKeywordAssociation( profile=self.john
+                                                       , keyword_=self.horse
+                                                       , weight=.5
+                                                       )
+        db.session.add(self.john)
+        db.session.add(self.horse)
+        db.session.add(self.horse_assoc)
+        db.session.commit()
+
+    def testExistingKeywords(self):
+        self.assertEqual(self.john.keywords['horse'], .5)
+        self.john.keywords['horse'] = 2.5
+        db.session.commit()
+        self.assertEqual(self.john.keywords['horse'], 2.5)
+        self.assertEqual(self.horse_assoc.weight, 2.5)
+
+    def testCreateKeywords(self):
+        self.john.keywords['cart'] = .5
+        db.session.commit()
+        
+        self.assertEqual(self.john.keywords['cart'], .5)
+        
+        cart = db.Keyword.query.filter_by(name='cart').one()
+        self.assertEqual(cart.profiles_[0].weight, .5)
+
 class QuerySortingTestCase(DatabaseTestCase):
     def setUp(self):
         super().setUp()
