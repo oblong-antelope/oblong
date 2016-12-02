@@ -1,103 +1,175 @@
 import json
 import unittest
-from . import server
 
-'''class QueryTestCase(unittest.TestCase):
+from flask import url_for
+from . import server, database as db
+from .database_tests import DatabaseTestCase
+
+class ServerTestCase(DatabaseTestCase):
     def setUp(self):
+        super().setUp()
+
+        # set up database
+        self.john = db.Profile( title='Mr'
+                              , firstname='John'
+                              , lastname='Smith'
+                              , initials='J S'
+                              , alias=None
+                              , email='john.smith@ic.ac.uk'
+                              , faculty='Natural Sciences'
+                              , department='Department of Computing'
+                              , campus='South Kensington'
+                              , building='Huxley'
+                              , room='308'
+                              , website='http://www.doc.ic.ac.uk/~john.smith'
+                              )
+        self.jane = db.Profile( title='Ms'
+                              , firstname='Jane'
+                              , lastname='Doe'
+                              , initials='J W'
+                              , alias=None
+                              , email='jane.doe@ic.ac.uk'
+                              , faculty='Engineering'
+                              , department='Department of Civil Engineering'
+                              , campus='South Kensington'
+                              , building='City & Guilds'
+                              , room='201'
+                              , website='http://www.ic.ac.uk/pages/jane.doe'
+                              )
+        self.mary = db.Profile( title='Mrs'
+                              , firstname='Mary'
+                              , lastname='Sue'
+                              , initials='M Y'
+                              , alias='Mabs'
+                              , email='mary.sue@ic.ac.uk'
+                              , faculty='Medicine'
+                              , department='Department of Lungs'
+                              , campus='Hammersmith'
+                              , building='John Soane'
+                              , room='-12'
+                              , website='http://google.com'
+                              )
+
+        self.paper0 = db.Publication( title='Paper0'
+                                    , abstract='A paper about argumentation.'
+                                    , date='2016-01-01'
+                                    , authors=[self.john, self.jane]
+                                    )
+
+        self.john.keywords['argumentation'] = 1.
+        self.jane.keywords['argumentation'] = 2.
+
+        self.paper1 = db.Publication( title='Paper1'
+                                    , abstract='A paper about machine learning.'
+                                    , date='2015-02-01'
+                                    , authors=[self.john, self.mary]
+                                    )
+
+        self.john.keywords['machine learning'] = 4.
+        self.mary.keywords['machine learning'] = 3.
+
+        for p in (self.john, self.jane, self.mary, self.paper0, self.paper1):
+            db.session.add(p)
+
+        db.session.commit()
+
+        # set up test client
         self.app = server.app.test_client()
 
+class QueryTestCase(ServerTestCase):
+    maxDiff = None
+
     def test_good_request(self):
-        response = self.app.post(
-            '/api/query/submit',
-            data=json.dumps(dict(
-                expertise='artificial intelligence',
-                role='supervisor'
-            )),
-            content_type='application/json'
-        )
+        response = self.app.post('/api/queries', data='argumentation')
         data = json.loads(response.data.decode('utf-8'))
-        self.assertTrue(data['success'])
         
-        full_response = self.app.get(data['results'])
-        full_data = json.loads(full_response.data.decode('utf-8'))
-        self.assertEqual(full_data,
-            [ { 'name': 'Dr. Tim Timson'
-              , 'department': 'Department of Tim Research'
-              , 'email': 'tim@timresearch.ic.ac.uk'
-              , 'research_summary': '/api/person/0/summary'
-              , 'full_profile': '/api/person/0/full'
-              } 
-            , { 'name': 'Dr. Timothy Timsworth'
-              , 'department': 'Department of Tim Rights'
-              , 'email': 'tim@timrights.ic.ac.uk'
-              , 'research_summary': '/api/person/1/summary'
-              , 'full_profile': '/api/person/1/full'
+        self.assertEqual(data,
+            [ { 'name': { 'title': 'Ms'
+                        , 'first': 'Jane'
+                        , 'last': 'Doe'
+                        , 'initials': 'J W'
+                        , 'alias': None
+                        }
+              , 'email': 'jane.doe@ic.ac.uk'
+              , 'faculty': 'Engineering'
+              , 'department': 'Department of Civil Engineering'
+              , 'keywords': ['argumentation']
+              , 'link': '/api/people/2'
+              }
+            , { 'name': { 'title': 'Mr'
+                        , 'first': 'John'
+                        , 'last': 'Smith'
+                        , 'initials': 'J S'
+                        , 'alias': None
+                        }
+              , 'email': 'john.smith@ic.ac.uk'
+              , 'faculty': 'Natural Sciences'
+              , 'department': 'Department of Computing'
+              , 'keywords': ['machine learning', 'argumentation']
+              , 'link': '/api/people/1'
               } 
             ]
         )
 
-    def test_bad_request(self):
-        response = self.app.post(
-            '/api/query/submit',
-            data=json.dumps({}),
-            content_type='application/json'
-        )
-        data = json.loads(response.data.decode('utf-8'))
-        self.assertTrue(data['success'])
+class PublicationSubmitTestCase(ServerTestCase):
+    def test_known_author(self):
+        pub_data = { 'title': 'Paper2'
+                   , 'abstract': 'A paper about wild horses.'
+                   , 'date': '2013-05-03'
+                   , 'authors': [ { 'name': { 'title': 'Mr'
+                                            , 'first': 'John'
+                                            , 'last': 'Smith'
+                                            , 'initials': None
+                                            , 'alias': None
+                                            }
+                                  , 'email': None
+                                  , 'faculty': 'Natural Sciences'
+                                  , 'department': 'Department of Computing'
+                                  , 'campus': None
+                                  , 'building': None
+                                  , 'room': None
+                                  , 'website': None
+                                  }
+                                ]
+                    }
 
-        full_response = self.app.get(data['results'])
-        full_data = json.loads(full_response.data.decode('utf-8'))
-        self.assertEqual(full_data, [])
+        self.app.post('/api/publications', data=json.dumps(pub_data),
+                content_type='application/json')
+        
+        self.assertIn('wild horses', self.john.keywords)
+        self.assertNotIn('wild horses', self.jane.keywords)
+        self.assertNotIn('wild horses', self.mary.keywords)
+        self.assertEqual(db.Profile.query.count(), 3)
+        
+    def test_new_author(self):
+        pub_data = { 'title': 'Paper2'
+                   , 'abstract': 'A paper about wild horses.'
+                   , 'date': '2013-05-03'
+                   , 'authors': [ { 'name': { 'title': 'Ms'
+                                            , 'first': 'Clara'
+                                            , 'last': 'Oswald'
+                                            , 'initials': None
+                                            , 'alias': None
+                                            }
+                                  , 'email': None
+                                  , 'faculty': 'Natural Sciences'
+                                  , 'department': 'Department of Computing'
+                                  , 'campus': None
+                                  , 'building': None
+                                  , 'room': None
+                                  , 'website': None
+                                  }
+                                ]
+                    }
 
-class PersonResearchSummaryTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = server.app.test_client()
+        self.app.post('/api/publications', data=json.dumps(pub_data),
+                content_type='application/json')
+        
+        self.assertNotIn('wild horses', self.john.keywords)
+        self.assertNotIn('wild horses', self.jane.keywords)
+        self.assertNotIn('wild horses', self.mary.keywords)
+        self.assertEqual(db.Profile.query.count(), 4)
 
-    def test_good_request(self):
-        response = self.app.get('/api/person/0/summary')
-        data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(data,
-            { 'papers': 9
-            , 'keywords': ['Tim', 'ai', 'learning', 'machine']
-            , 'recent_paper': 'https://arXiv.org/abs/1024.01232'
-            , 'full_profile': '/api/person/0/full'
-            }
-        )
+        clara = db.Profile.query.all()[3]
 
-class PersonFullTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = server.app.test_client()
-
-    def test_good_request(self):
-        response = self.app.get('/api/person/0/full')
-        data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(data,
-            { 'name': 'Dr. Tim Timson'
-            , 'department': 'Department of Tim Research'
-            , 'email': 'tim@timresearch.ic.ac.uk'
-            , 'awards':
-                [ 'Tim Medal 2009'
-                , 'Nobel Prize for Tim Research'
-                ]
-            , 'papers':
-                [ 'https://arXiv.org/abs/1024.01232'
-                , 'https://arXiv.org/abs/1024.01233'
-                , 'https://arXiv.org/abs/1024.01234'
-                , 'https://arXiv.org/abs/1024.01235'
-                , 'https://arXiv.org/abs/1024.01236'
-                , 'https://arXiv.org/abs/1024.01237'
-                , 'https://arXiv.org/abs/1024.01238'
-                , 'https://arXiv.org/abs/1024.01239'
-                , 'https://arXiv.org/abs/1024.01240'
-                ]
-            , 'keywords': 
-                { 'learning': 2546
-                , 'machine': 1000
-                , 'ai': 1000
-                , 'Tim': 40
-                }
-            }
-        )'''
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertIn('wild horses', clara.keywords)
