@@ -18,10 +18,10 @@ nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 onto = Ontology() #import the ACM ontology
 
 #find the names of people, departments, campuses and faculties in the database
-names    = set([w.lower() for w in db.session.name.query()])
-deps     = set([w.lower() for w in db.session.department.query()])
-campuses = set([w.lower() for w in db.session.campus.query()])
-facs     = set([w.lower() for w in db.session.faculty.query()])
+names    = None 
+deps     = None 
+campuses = None 
+facs     = None 
 
 def fulfill_query(text):
     """Fulfills a query by searching the database.
@@ -32,6 +32,9 @@ def fulfill_query(text):
 
     """
     global names, deps, facs, campuses
+
+    if not names:
+        update_name_sets()
 
     keywords = get_keywords(text)
 
@@ -221,7 +224,7 @@ def weighting(word, words, date, distance=0):
     time_diff = current_year - year
     return FUNC_D(time_diff) + FUNC_DS(distance)
 
-def update_names_and_orgs():
+def update_name_sets():
     """Updates the names, fauclties, departments and campuses sets
     """
     global names, deps, campuses, facs
