@@ -231,8 +231,9 @@ def init(connection_url):
     global Base, engine, session
     engine = create_engine(connection_url)
     session = scoped_session(sessionmaker(autocommit=False,
-                                             autoflush=False,
-                                             bind=engine))
+                                          autoflush=False,
+                                          expire_on_commit=False,
+                                          bind=engine))
     Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)
 
