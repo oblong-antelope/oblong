@@ -6,6 +6,8 @@ from . import server, database as db
 from .database_tests import DatabaseTestCase
 
 class ServerTestCase(DatabaseTestCase):
+    maxDiff = None
+
     def setUp(self):
         super().setUp()
 
@@ -77,8 +79,6 @@ class ServerTestCase(DatabaseTestCase):
         self.app = server.app.test_client()
 
 class QueryTestCase(ServerTestCase):
-    maxDiff = None
-
     def test_good_request(self):
         response = self.app.post('/api/queries', data='argumentation')
         data = json.loads(response.data.decode('utf-8'))
@@ -173,3 +173,33 @@ class PublicationSubmitTestCase(ServerTestCase):
         clara = db.Profile.query.all()[3]
 
         self.assertIn('wild horses', clara.keywords)
+
+class PeopleTestCase(ServerTestCase):
+    def testPeople(self):
+        response = self.app.get('/api/people/1')
+        data = json.loads(response.data.decode('utf-8'))
+        
+        self.assertEqual(data,
+            { 'name': { 'title': 'Mr'
+                      , 'first': 'John'
+                      , 'last': 'Smith'
+                      , 'initials': 'J S'
+                      , 'alias': None
+                      }
+            , 'email':'john.smith@ic.ac.uk'
+            , 'faculty': 'Natural Sciences'
+            , 'department': 'Department of Computing'
+            , 'campus': 'South Kensington'
+            , 'building': 'Huxley'
+            , 'room': '308'
+            , 'website': 'http://www.doc.ic.ac.uk/~john.smith'
+            , 'keywords': {'argumentation': 1., 'machine learning': 4.}
+            , 'publications': [ { 'title': 'Paper0'
+                               , 'link': '/api/publications/1'
+                               }
+                             , { 'title': 'Paper1'
+                               , 'link': '/api/publications/2'
+                               }
+                             ]
+            }
+        )
