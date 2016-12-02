@@ -18,10 +18,10 @@ nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 onto = Ontology() #import the ACM ontology
 
 #find the names of people, departments, campuses and faculties in the database
-names    = Set([w.lower() for w in db.session.name.query()])
-deps     = Set([w.lower() for w in db.session.department.query()])
-campuses = Set([w.lower() for w in db.session.campus.query()])
-facs     = Set([w.lower() for w in db.session.faculty.query()])
+names    = set([w.lower() for w in db.session.name.query()])
+deps     = set([w.lower() for w in db.session.department.query()])
+campuses = set([w.lower() for w in db.session.campus.query()])
+facs     = set([w.lower() for w in db.session.faculty.query()])
 
 def fulfill_query(text):
     """Fulfills a query by searching the database.
@@ -225,7 +225,7 @@ def update_names_and_orgs():
     """Updates the names, fauclties, departments and campuses sets
     """
     global names, deps, campuses, facs
-    names    = Set([w.lower() for w in db.session.name.query()])
-    deps     = Set([w.lower() for w in db.session.department.query()])
-    campuses = Set([w.lower() for w in db.session.campus.query()])
-    facs     = Set([w.lower() for w in db.session.faculty.query()])
+    names    = set([w.lower() for w in db.session.name.query()])
+    deps     = set([w.lower() for w in db.session.department.query()])
+    campuses = set([w.lower() for w in db.session.campus.query()])
+    facs     = set([w.lower() for w in db.session.faculty.query()])
