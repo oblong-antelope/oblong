@@ -9,29 +9,31 @@ Attributes:
 Examples:
     Intialise the module:
 
-    >>> init("postgresql://postgres:oblong@localhost/postgres")
+    >>> import testing.postgresql
+    >>> postgresql = testing.postgresql.Postgresql()
+    >>> init(postgresql.url())
 
     Create a profile:
 
-    >>> p = Profile(name='John', keywords={'hello': 7, 'world': 1})
+    >>> p = Profile(title='Mr', firstname='John', lastname='Smith',
+    ...             keywords={'hello': 7, 'world': 1})
     >>> session.add(p)
     >>> session.commit()
 
     Retrieve profiles:
 
-    >>> session.query(Profile).filter_by(name='John').all()
-    [<Profile id=... name=John>]
-    >>> Profile.query.filter_by(name='John').all()
-    [<Profile id=... name=John>]
+    >>> session.query(Profile).filter_by(firstname='John').all()
+    [<Profile id=... name=Mr John Smith>]
+    >>> Profile.query.filter_by(firstname='John').all()
+    [<Profile id=... name=Mr John Smith>]
     >>> Keyword.query.filter_by(name='hello').one_or_none()
     <Keyword id=... name=hello>
 
     Change a profile:
 
     >>> p = Profile.query.first()
-    >>> p.name = 'John Smith'
+    >>> p.firstname = 'Harry'
     >>> p.keywords['face'] = 12
-    >>> p.awards.append('An Award')
     >>> session.commit()
 
     Remove a profile:
@@ -39,6 +41,9 @@ Examples:
     >>> p = Profile.query.first()
     >>> session.delete(p)
     >>> session.commit()
+
+    >>> session.remove()
+    >>> postgresql.stop()
 
 """
 from sqlalchemy import (create_engine, Table, Column, 
