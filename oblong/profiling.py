@@ -6,7 +6,6 @@ from time import gmtime
 
 from nltk import pos_tag, word_tokenize, RegexpParser
 from nltk.stem import WordNetLemmatizer
-from sqlalchemy.orm.exc import NoResultFound
 
 from . import database as db
 
@@ -27,21 +26,7 @@ def fulfill_query(text):
     print("text of query: ", text)
 
     keywords = get_keywords(text)
-    print(keywords)
-    for k in keywords:
-        profiles = profiles.filter(db.Profile.keywords_.any(
-                db.ProfileKeywordAssociation.keyword == k
-                ))
-
-    results = profiles.all()
-    def sort_function(profile):
-        for k in keywords:
-            print(dict(profile.keywords))
-        return sum(profile.keywords[k] for k in keywords)
-    for p in results:
-        print(p.firstname, sort_function(p))
-    results.sort(key=sort_function, reverse=True) 
-    return results
+    return db.get_profiles_by_keywords(keywords)
 
 def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
