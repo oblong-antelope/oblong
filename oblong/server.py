@@ -214,6 +214,22 @@ def publication(uid):
                  }
         return json.dumps(result)
 
+@app.route('/api/keywords', methods=['POST'])
+def submit_keyword(uid):
+    if request.is_json:
+        submission = request.get_json()
+        uid = submission['uid']
+        words = submission['words']
+        add_user_keywords(words,uid)
+        response = { 'success': True }
+        return json.dumps(response), 201
+    else:
+        response = { 'error_code': 415
+                   , 'message': 'JSON, please.' 
+                   }
+        return json.dumps(response), 415
+
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     """Ensures that ``db.session`` is closed at the end of each request."""

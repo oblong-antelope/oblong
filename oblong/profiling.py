@@ -130,6 +130,26 @@ def update_authors_profiles(title, abstract, authors, date):
         profile.publications.append(publication)
     db.session.commit()
 
+def add_user_keywords(words, uid):
+    """Adds a list of user-provided keywords to a profile.
+
+    Parameters:
+        USER_WEIGHT (int): the weight to assign a user-provided
+            keyword
+
+    Args:
+        words (list[str]): the keywords to add
+        uid (int): id of the user whose profile we want to update
+    """
+    USER_WEIGHT = 1000
+    profile = db.Profile.query.get(uid)
+    for word in words:
+        if word not in profile.keywords:
+            profile.keywords[word] = 0
+        profile.keywords[word] += USER_WEIGHT
+    db.session.commit()
+    
+
 def get_keywords(text):
     """Gets the keywords from a text excerpt.
 
