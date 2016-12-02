@@ -56,6 +56,7 @@ def queries():
 
     """
     results = profiling.fulfill_query(request.get_data().decode('utf-8'))
+    profiles = next(zip(*results))
         
     response = [{ 'name': profile.name
                 , 'email': profile.email
@@ -63,7 +64,7 @@ def queries():
                 , 'department': profile.department
                 , 'keywords': top_keywords(profile)
                 , 'link': url_for('profile', uid=profile.id)
-                } for profile in results]
+                } for profile in profiles]
 
     return json.dumps(response)
 
