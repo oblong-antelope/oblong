@@ -105,6 +105,9 @@ def get_keywords(text):
     basedir = os.path.dirname(__file__)
     with open(os.path.join(basedir, 'data', 'stopwords.txt'), 'r') as f:
         stopwords = [line.rstrip(linesep) for line in f]
+    
+    #We don't want keywords to contain anything in this list
+    forbidden = ['.',',',';',':','?','!',')','[',']','<','>','"','1','2','3','4','5','6','7','8','9','0']
 
     # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
     patterns = """NP: {<JJ>*<NN><NNS>}
@@ -134,19 +137,11 @@ def get_keywords(text):
     lemmatizer = WordNetLemmatizer()
     lems = [lemmatizer.lemmatize(x) for x in lemmatizables]
 
-    #removing stopwords after lemmatizing
+    #removing stopwords after lemmatizinga, then removing anything containing punctuation or a number
     lems = filter(lambda lem: lem not in stopwords, lems)
+    lems = filter(lambda lem: not any(char in lem for char in forbidden), lems)
 
     return tuple(lems)
-
-'''def get_lemma_pos(tag):
-    """Magic function, speak to Aran Dhaliwal.""" Not needed right now
-    mapping = { 'J': 'a'
-              , 'V': 'v'
-              , 'N': 'n'
-              , 'R': 'r'
-              }
-    return mapping.get(tag[0], 'n')'''
 
 def weighting(word, words, date, distance=0):
     """Weights the importance of a keyword.
