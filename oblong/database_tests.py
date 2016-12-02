@@ -23,12 +23,13 @@ class KeywordDictTestCase(DatabaseTestCase):
 
         self.john = db.Profile(title="Mr", firstname="John", lastname="Smith")
         self.horse = db.Keyword(name='horse')
+        db.session.add(self.john)
+        db.session.add(self.horse)
+        db.session.flush()
         self.horse_assoc = db.ProfileKeywordAssociation( profile=self.john
                                                        , keyword_=self.horse
                                                        , weight=.5
                                                        )
-        db.session.add(self.john)
-        db.session.add(self.horse)
         db.session.add(self.horse_assoc)
         db.session.commit()
 
