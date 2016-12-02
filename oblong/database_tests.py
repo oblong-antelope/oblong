@@ -69,25 +69,25 @@ class QuerySortingTestCase(DatabaseTestCase):
         db.session.commit()
 
     def testOneKeyword(self):
-        self.assertEqual( db.get_profiles_by_keywords(['horse'])
+        self.assertEqual( db.get_profiles_by_keywords(['horse']).all()
                         , [(self.mary, 2.), (self.john, 1.)]
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['cart'])
+        self.assertEqual( db.get_profiles_by_keywords(['cart']).all()
                         , [(self.jane, 4.), (self.mary, 3.)]
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['descartes'])
+        self.assertEqual( db.get_profiles_by_keywords(['descartes']).all()
                         , [(self.jane, 5.)]
                         )
-        self.assertEqual(db.get_profiles_by_keywords(['not in db']), [])
+        self.assertEqual(db.get_profiles_by_keywords(['not in db']).all(), [])
 
     def testManyKeywords(self):
         """Query is OR, so return profiles with any of the keywords."""
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'cart'])
+        self.assertEqual( db.get_profiles_by_keywords(['horse', 'cart']).all()
                         , [(self.mary, 5.), (self.jane, 4.), (self.john, 1.)]
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'descartes'])
+        self.assertEqual( db.get_profiles_by_keywords(['horse', 'descartes']).all()
                         , [(self.jane, 5.), (self.mary, 2.), (self.john, 1.)]
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'not in db'])
+        self.assertEqual( db.get_profiles_by_keywords(['horse', 'not in db']).all()
                         , [(self.mary, 2.), (self.john, 1.)]
                         )
