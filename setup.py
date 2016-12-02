@@ -21,4 +21,5 @@ setup( name='oblong'
                ('git+https://github.com/adelosa/testing.postgresql'
                 '@fix-windows-support#egg=testing.postgresql')
              ]
+     , setup_requires = ['nose']
      )

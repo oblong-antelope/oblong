@@ -263,4 +263,4 @@ def get_profiles_by_keywords(keyword_list):
            .filter(Keyword.name.in_(keyword_list))
            .group_by(Profile.id)
            .order_by(desc('weight_sum'))
-           ).all()
+           )
