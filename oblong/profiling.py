@@ -18,10 +18,11 @@ nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 onto = Ontology() #import the ACM ontology
 
 #find the names of people, departments, campuses and faculties in the database
-names    = None 
-deps     = None 
-campuses = None 
-facs     = None 
+firstnames = None 
+surnames   = None 
+deps       = None 
+campuses   = None 
+facs       = None 
 
 def fulfill_query(text):
     """Fulfills a query by searching the database.
@@ -31,21 +32,24 @@ def fulfill_query(text):
             and profiles containing those keywords will be returned.
 
     """
-    global names, deps, facs, campuses
+    global firstnames, surnames, deps, facs, campuses
 
-    if not names:
+    if not firstnames:
         update_name_sets()
 
     keywords = get_keywords(text)
 
     #check for names in keywords
-    name = ''
+    fname = ''
+    sname = ''
     dep = ''
     camp = ''
     fac = ''
     for k in keywords:
-        if k.lower() in names:
-            name = k
+        if k.lower() in firstnames:
+            fname = k
+        if k.lower() in surnames:
+            sname = k
         elif k.lower() in deps:
             dep = k
         elif k.lower() in campuses:
@@ -55,8 +59,10 @@ def fulfill_query(text):
 
     profiles = db.get_profiles_by_keywords(keywords)
 
-    if name:
-        profiles = profiles.filter(db.Profile.name==name)
+    if fname:
+        profiles = profiles.filter(db.Profile.firstname==fname)
+    if sname:
+        profiles = profiles.filter(db.Profile.surname==sname)
     if camp:
         profiles = profiles.filter(db.Profile.campus==camp)
     if dep:
@@ -227,8 +233,9 @@ def weighting(word, words, date, distance=0):
 def update_name_sets():
     """Updates the names, fauclties, departments and campuses sets
     """
-    global names, deps, campuses, facs
-    names    = set([w.lower() for w in db.session.name.query()])
-    deps     = set([w.lower() for w in db.session.department.query()])
-    campuses = set([w.lower() for w in db.session.campus.query()])
-    facs     = set([w.lower() for w in db.session.faculty.query()])
+    global firstnames, surnames, deps, campuses, facs
+    firstnames = set([w.lower() for w in db.session.query(Profile.firstname).all()])
+    surnames   = set([w.lower() for w in db.session.query(Profile.surname).all()])
+    deps       = set([w.lower() for w in db.session.department.query()])
+    campuses   = set([w.lower() for w in db.session.campus.query()])
+    facs       = set([w.lower() for w in db.session.faculty.query()])
