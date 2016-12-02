@@ -2,6 +2,8 @@
 
 import rdflib
 import os.path
+import logging
+
 
 #define constants
 ACM_ONTOLOGY = os.path.join(os.path.dirname(__file__), "data",
@@ -30,8 +32,19 @@ class Ontology:
                 namespace by default
         """
         #import ontology
+
+        # br1314: squelch annoying WARNING logs
+        logger = logging.getLogger('rdflib.term')
+        old_level = logger.getEffectiveLevel()
+        logger.setLevel(logging.ERROR)
+
         self.g = rdflib.Graph()
         result = self.g.parse(path)
+
+        # br1314: restore old log level
+        logger.setLevel(old_level)
+        del logger
+        del old_level
 
         #specify namespace
         self.n = rdflib.Namespace(ns)
