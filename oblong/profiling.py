@@ -14,6 +14,12 @@ from .ontology import *
 
 onto = Ontology() #import the ACM ontology
 
+#find the names of people, departments, campuses and faculties in the database
+names    = Set([w.lower() for w in db.session.name.query()])
+deps     = Set([w.lower() for w in db.session.department.query()])
+campuses = Set([w.lower() for w in db.session.campus.query()])
+facs     = Set([w.lower() for w in db.session.faculty.query()])
+
 def fulfill_query(text):
     """Fulfills a query by searching the database.
 
@@ -22,12 +28,39 @@ def fulfill_query(text):
             and profiles containing those keywords will be returned.
 
     """
+    global names, deps, facs, campuses
+
     profiles = db.Profile.query
 
     print("text of query: ", text)
 
     keywords = get_keywords(text)
     print(keywords)
+
+    #check for names in keywords
+    name = ''
+    dep = ''
+    camp = ''
+    fac = ''
+    for k in keywords:
+        if k.lower() in names:
+            name = k
+        if k.lower() in deps:
+            dep = k
+        if k.lower() in campuses:
+            camp = k
+        if k.lower() in facs:
+            fac = k
+
+    if name:
+        profiles = profiles.filter_by(name=name)
+    if camp:
+        profiles = profiles.filter_by(campus=camp)
+    if dep:
+        profiles = profiles.filter_by(department=dep)
+    if fac:
+        profiles = profiles.filter_by(faculty=fac)
+
     for k in keywords:
         profiles = profiles.filter(db.Profile.keywords_.any(
                 db.ProfileKeywordAssociation.keyword == k
@@ -204,3 +237,12 @@ def weighting(word, words, date, distance=0):
     current_year = gmtime()[0]
     time_diff = current_year - year
     return FUNC_D(time_diff) + FUNC_DS(distance)
+
+def update_names_and_orgs():
+    """Updates the names, fauclties, departments and campuses sets
+    """
+    global names, deps, campuses, facs
+    names    = Set([w.lower() for w in db.session.name.query()])
+    deps     = Set([w.lower() for w in db.session.department.query()])
+    campuses = Set([w.lower() for w in db.session.campus.query()])
+    facs     = Set([w.lower() for w in db.session.faculty.query()])
