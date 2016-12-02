@@ -42,7 +42,8 @@ Examples:
 
 """
 from sqlalchemy import (create_engine, Table, Column, 
-        Enum, Integer, Float, Text, String, Date, ForeignKey)
+        Enum, Integer, Float, Text, String, Date, ForeignKey,
+        func, desc)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -175,7 +176,8 @@ class Profile(Base):
             raise ValueError('name must be dict or string')
 
     def __repr__(self):
-        return '<Profile id={} name={}>'.format(self.id, self.name)
+        name = "{} {} {}".format(self.title, self.firstname, self.lastname)
+        return '<Profile id={} name={}>'.format(self.id, name)
 
 class Keyword(Base):
     """Table to contain keywords for profile lookup."""
@@ -228,3 +230,31 @@ def init(connection_url):
                                              bind=engine))
     Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)
+
+def get_profiles_by_keywords(keyword_list):
+    """Gets a list of profiles that have any of the keywords.
+
+    The weighting of a profile is calculated as the sum of the
+    weghtings of the links between the profile and any relevant
+    keywords.
+
+    Args:
+        keyword_list (Sequence[str]): The keywords to search for.
+
+    Returns:
+        (List[Tuple[Profile, float]]): A list of profiles and
+        weightings, sorted by weighting in descending order.
+
+    """
+    weight_sum = (func
+                 .sum(ProfileKeywordAssociation.weight)
+                 .label('weight_sum')
+                 )
+
+    return (session.query(Profile, weight_sum)
+           .join(ProfileKeywordAssociation)
+           .join(Keyword)
+           .filter(Keyword.name.in_(keyword_list))
+           .group_by(Profile.id)
+           .order_by(desc('weight_sum'))
+           ).all()
