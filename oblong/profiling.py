@@ -177,11 +177,11 @@ def weighting(word, words, date, distance=0):
     """
     CUTOFF_D = 50
     BASE_D = .5
-    def FUNC_D(d): return -.09 * d + 5 if f <= CUTOFF_D else BASE_D
+    def FUNC_D(d): return -.09 * d + 5 if d <= CUTOFF_D else BASE_D
 
     CUTOFF_DS = 10
     BASE_DS = .5
-    def FUNC_DS(d): return -.45 * d + 5 if f <= CUTOFF_DS else BASE_DS
+    def FUNC_DS(d): return -.45 * d + 5 if d <= CUTOFF_DS else BASE_DS
 
     year = int(date[:4])
     current_year = gmtime()[0]
