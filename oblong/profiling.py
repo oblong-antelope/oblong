@@ -17,13 +17,6 @@ nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 
 onto = Ontology() #import the ACM ontology
 
-#find the names of people, departments, campuses and faculties in the database
-firstnames = None 
-surnames   = None 
-deps       = None 
-campuses   = None 
-facs       = None 
-
 def fulfill_query(text):
     """Fulfills a query by searching the database.
 
@@ -32,47 +25,10 @@ def fulfill_query(text):
             and profiles containing those keywords will be returned.
 
     """
-    global firstnames, surnames, deps, facs, campuses
-
-    if not firstnames:
-        update_name_sets()
-
     keywords = get_keywords(text)
-
-    #check for names in keywords
-    fname = ''
-    sname = ''
-    dep = ''
-    camp = ''
-    fac = ''
-    for k in keywords:
-        if k.lower() in firstnames:
-            fname = k
-        if k.lower() in surnames:
-            sname = k
-        elif k.lower() in deps:
-            dep = k
-        elif k.lower() in campuses:
-            camp = k
-        elif k.lower() in facs:
-            fac = k
-
-    profiles = db.get_profiles_by_keywords(keywords)
-
-    if fname:
-        profiles = profiles.filter(db.Profile.firstname==fname)
-    if sname:
-        profiles = profiles.filter(db.Profile.surname==sname)
-    if camp:
-        profiles = profiles.filter(db.Profile.campus==camp)
-    if dep:
-        profiles = profiles.filter(db.Profile.department==dep)
-    if fac:
-        profiles = profiles.filter(db.Profile.faculty==fac)
-
-    results = profiles.all()
-
-    return results
+    if not keywords:
+        return []
+    return db.get_profiles_by_keywords(keywords)
 
 def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
@@ -142,7 +98,7 @@ def add_user_keywords(words, uid):
         uid (int): id of the user whose profile we want to update
     """
     USER_WEIGHT = 1000
-    profile = db.Profile.query.get(uid)
+    profile = db.Profile.get(uid)
     for word in words:
         if word not in profile.keywords:
             profile.keywords[word] = 0
@@ -249,17 +205,3 @@ def weighting(word, words, date, distance=0):
     current_year = gmtime()[0]
     time_diff = current_year - year
     return FUNC_D(time_diff) + FUNC_DS(distance)
-
-def update_name_sets():
-    """Updates the names, fauclties, departments and campuses sets
-    """
-    global firstnames, surnames, deps, campuses, facs
-    records = db.session.query(db.Profile.firstname
-                              ,db.Profile.lastname
-                              ,db.Profile.department
-                              ,db.Profile.campus
-                              ,db.Profile.faculty
-                              ).all()
-
-    firstnames, surnames, deps, campuses, facs =\
-            (set(w.lower() for w in rec) for rec in zip(*records))

@@ -48,7 +48,7 @@ Examples:
 """
 from sqlalchemy import (create_engine, Table, Column, 
         Enum, Integer, Float, Text, String, Date, ForeignKey,
-        func, desc)
+        func, exists, desc)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -58,6 +58,9 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 
+import operator
+from functools import reduce
+
 __author__ = 'Blaine Rogers <br1314@ic.ac.uk>'
 
 #: The database engine.
@@ -66,6 +69,11 @@ engine = None
 session = None
 #: The declarative base class.
 Base = declarative_base()
+Base.get = classmethod(lambda cls, uid: cls.query.get(uid))
+Base.count = classmethod(lambda cls: cls.query.count())
+Base.get_page = classmethod(lambda cls, page_no, size: \
+        cls.query.slice(page_no * size, (page_no + 1) * size))
+
 #: Enumeration type for query status.
 Status = Enum("in_progress", "finished", "deleted", name="Status")
 
@@ -196,6 +204,10 @@ class Keyword(Base):
     def __repr__(self):
         return '<Keyword id={} name={}>'.format(self.id, self.name)
 
+    @classmethod
+    def get(cls, name):
+        return cls.query.filter_by(name=name).one_or_none()
+
 class Publication(Base):
     __tablename__ = 'publication'
     id = Column(Integer, primary_key=True)
@@ -237,7 +249,7 @@ def init(connection_url):
     Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)
 
-def get_profiles_by_keywords(keyword_list):
+def get_profiles_by_keywords(keywords):
     """Gets a list of profiles that have any of the keywords.
 
     The weighting of a profile is calculated as the sum of the
@@ -245,22 +257,52 @@ def get_profiles_by_keywords(keyword_list):
     keywords.
 
     Args:
-        keyword_list (Sequence[str]): The keywords to search for.
+        keywords (Sequence[str]): The keywords to search for.
 
     Returns:
         (List[Tuple[Profile, float]]): A list of profiles and
         weightings, sorted by weighting in descending order.
 
     """
+    keywords = [k.lower() for k in keywords]
+
     weight_sum = (func
                  .sum(ProfileKeywordAssociation.weight)
                  .label('weight_sum')
                  )
 
-    return (session.query(Profile, weight_sum)
-           .join(ProfileKeywordAssociation)
-           .join(Keyword)
-           .filter(Keyword.name.in_(keyword_list))
-           .group_by(Profile.id)
-           .order_by(desc('weight_sum'))
-           )
+    searched_columns = [ Profile.firstname
+                       , Profile.lastname
+                       , Profile.department
+                       , Profile.campus
+                       , Profile.faculty
+                       ]
+
+    searched_columns = [func.lower(s) for s in searched_columns]
+
+    q = (session.query(Profile, weight_sum)
+        .join(ProfileKeywordAssociation)
+        .join(Keyword)
+        )
+
+    notkeywords = set()
+    cond = None
+    for col in searched_columns:
+        matches = session.query(col).filter(col.in_(keywords)).distinct().all()
+        matches = [m[0] for m in matches]
+        notkeywords |= set(matches)
+        if matches:
+            if cond is None:
+                cond = col.in_(matches)
+            cond |= col.in_(matches)
+    
+    if cond is not None:
+        q = q.filter(cond)
+
+    for k in notkeywords:
+        keywords.remove(k)
+
+    if keywords:
+        q = q.filter(Keyword.name.in_(keywords))
+
+    return q.group_by(Profile.id).order_by(desc('weight_sum')).all()

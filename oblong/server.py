@@ -56,7 +56,10 @@ def queries():
 
     """
     results = profiling.fulfill_query(request.get_data().decode('utf-8'))
-    profiles = next(zip(*results))
+    profiles = tuple(zip(*results))
+    print(profiles)
+    if profiles:
+        profiles = profiles[0]
         
     response = [{ 'name': profile.name
                 , 'email': profile.email
@@ -79,11 +82,10 @@ def profiles():
                    }
         return json.dumps(response), 415
 
-    count = db.Profile.query.count()
+    count = db.Profile.count()
     if not count:
         return json.dumps({"count": count})
     else:
-        profiles = db.Profile.query.slice(page * size, (page + 1) * size)
         result = { 'count': count }
         if page > 0:
             result['previous_page'] = url_for('profiles', page=page - 1,
@@ -92,6 +94,7 @@ def profiles():
             result['next_page'] = url_for('profiles', page=page + 1,
                                           page_size=size)
 
+        profiles = db.Profile.get_page(page, size)
         result['this_page'] = [{ 'name': profile.name
                                , 'faculty': profile.faculty
                                , 'department': profile.department
@@ -112,7 +115,7 @@ def profile(uid):
         uid (str): The unique id of the person.
 
     """
-    profile = db.Profile.query.get(uid)
+    profile = db.Profile.get(uid)
     if not profile:
         abort(404)
     else:
@@ -131,7 +134,7 @@ def profile(uid):
 
 @app.route('/api/keywords/<keyword>')
 def keyword(keyword):
-    keyword = db.Keyword.query.filter_by(name=keyword).one_or_none()
+    keyword = db.Keyword.get(keyword)
     if not keyword:
         abort(404)
     else:
@@ -157,7 +160,7 @@ def publications():
                        }
             return json.dumps(response), 415
 
-        count = db.Publication.query.count()
+        count = db.Publication.count()
         if not count:
             return json.dumps({"count": count})
         else:
@@ -169,7 +172,7 @@ def publications():
                 result['next_page'] = url_for('publications', page=page + 1,
                                               page_size=size)
 
-            pubs = db.Publication.query.slice(page * size, (page + 1) * size)
+            pubs = db.Publication.get_page(page, size)
             result['this_page'] = [{ 'title': pub.title
                                    , 'date': str(pub.date)
                                    , 'authors': [url_for('profile', uid=a.id)
@@ -197,7 +200,7 @@ def publications():
 
 @app.route('/api/publications/<int:uid>')
 def publication(uid):
-    pub = db.Publication.query.get(uid)
+    pub = db.Publication.get(uid)
     if not pub:
         abort(404)
     else:

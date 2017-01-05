@@ -111,6 +111,12 @@ class QueryTestCase(ServerTestCase):
             ]
         )
 
+    def test_no_results(self):
+        response = self.app.post('/api/queries', data='bad!!keyword')
+        data = json.loads(response.data.decode('utf-8'))
+        
+        self.assertEqual(data, [])
+
 class PublicationSubmitTestCase(ServerTestCase):
     def test_known_author(self):
         pub_data = { 'title': 'Paper2'
@@ -175,7 +181,7 @@ class PublicationSubmitTestCase(ServerTestCase):
         self.assertIn('wild horses', clara.keywords)
 
 class PeopleTestCase(ServerTestCase):
-    def testPeople(self):
+    def testPerson(self):
         response = self.app.get('/api/people/1')
         data = json.loads(response.data.decode('utf-8'))
         
@@ -201,5 +207,52 @@ class PeopleTestCase(ServerTestCase):
                                , 'link': '/api/publications/2'
                                }
                              ]
+            }
+        )
+
+    def testPeople(self):
+        response = self.app.get('/api/people')
+        data = json.loads(response.data.decode('utf-8'))
+        
+        self.assertEqual(data,
+            { 'count': 3
+            , 'this_page': 
+                [ { 'name': 
+                      { 'title': 'Mr'
+                      , 'first': 'John'
+                      , 'last': 'Smith'
+                      , 'initials': 'J S'
+                      , 'alias': None
+                      }
+                  , 'faculty': 'Natural Sciences'
+                  , 'department': 'Department of Computing'
+                  , 'keywords': ['machine learning', 'argumentation']
+                  , 'link': '/api/people/1'
+                  }
+                , { 'name':
+                      { 'title': 'Ms'
+                      , 'first': 'Jane'
+                      , 'last': 'Doe'
+                      , 'initials': 'J W'
+                      , 'alias': None
+                      }
+                  , 'faculty': 'Engineering'
+                  , 'department': 'Department of Civil Engineering'
+                  , 'keywords': ['argumentation']
+                  , 'link': '/api/people/2'
+                  }
+                , { 'name':
+                      { 'title': 'Mrs'
+                      , 'first': 'Mary'
+                      , 'last': 'Sue'
+                      , 'initials': 'M Y'
+                      , 'alias': 'Mabs'
+                      }
+                  , 'faculty': 'Medicine'
+                  , 'department': 'Department of Lungs'
+                  , 'keywords': ['machine learning']
+                  , 'link': '/api/people/3'
+                  }
+                ]
             }
         )
