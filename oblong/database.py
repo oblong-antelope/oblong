@@ -49,13 +49,13 @@ Examples:
 from sqlalchemy import (create_engine, Table, Column, 
         Enum, Integer, Float, Text, String, Date, ForeignKey,
         func, exists, desc)
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.orm.collections import attribute_mapped_collection
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import (NoResultFound, MultipleResultsFound)
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 import operator
@@ -73,6 +73,16 @@ Base.get = classmethod(lambda cls, uid: cls.query.get(uid))
 Base.count = classmethod(lambda cls: cls.query.count())
 Base.get_page = classmethod(lambda cls, page_no, size: \
         cls.query.slice(page_no * size, (page_no + 1) * size))
+
+def find(cls, **kwargs):
+    print(kwargs)
+    try:
+        return cls.query.filter_by(**kwargs).all()
+    except InvalidRequestError:
+        raise AttributeError('at least one of ' + str(list(kwargs.keys()))
+                + ' is not a valid field of ' + cls.__name__)
+
+Base.find = classmethod(find)
 
 #: Enumeration type for query status.
 Status = Enum("in_progress", "finished", "deleted", name="Status")
