@@ -97,9 +97,15 @@ class QueryBasicTestCase(QueryTestCase):
         self.assertEqual( db.get_profiles_by_keywords(['Hammersmith'])
                         , [(self.peng, 2.33)]
                         )
+
     def testDuplicateFields(self):
         self.assertEqual( db.get_profiles_by_keywords(['Peng'])
                         , [(self.mary, 5.), (self.peng, 2.33)]
+                        )
+
+    def testBothNames(self):
+        self.assertEqual( db.get_profiles_by_keywords(['John', 'Smith'])
+                        , [(self.john, 1.)]
                         )
 
     def testFieldMatchingLowercase(self):
