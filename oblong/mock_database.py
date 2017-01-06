@@ -364,21 +364,38 @@ def get_one_or_create(model, create_method='', create_method_kwargs=None,
         return created, False
 
 def get_profiles_by_keywords(kwds):
+    kwds = [k.lower() for k in kwds]
+
+
+    searched_columns = [ 'firstname'
+                       , 'lastname'
+                       , 'department'
+                       , 'campus'
+                       , 'faculty'
+                       ]
+
     profiles = Profile.rows[:]
 
-    searched_columns = [ (n, any(getattr(p, n) in kwds for p in profiles))
-                         for n in [ 'firstname'
-                                  , 'lastname'
-                                  , 'department'
-                                  , 'campus'
-                                  , 'faculty'
-                                  ]
+    notkeywords = set()
+    cond = None
+    for col in searched_columns:
+        matches = set(getattr(p, col).lower() for p in Profile.rows) & set(kwds)
+        notkeywords |= matches
+        if matches:
+            if cond is None:
+                cond = lambda p: getattr(p, col).lower() in kwds
+            cond = lambda p: cond(p) or getattr(p, col).lowers() in kwds
 
-    for col, exists in searched_columns:
-        profiles = filter(lambda p: not exists or getattr(p, col) in kwds,
-                          profiles)
-    profiles = list(filter(lambda p: any(k in kwds for k in p.keywords),
-                           profiles))
+    if cond is not None:
+        profiles = filter(cond, profiles)
+
+    for k in notkeywords:
+        keywords.remove(k)
+
+    if keywords:
+        profiles = list(filter(lambda p: any(k in kwds for k in p.keywords),
+                               profiles))
+
     weights = [sum(v for k, v in p.keywords.items() if k in kwds)
                for p in profiles]
 
