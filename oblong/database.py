@@ -75,7 +75,6 @@ Base.get_page = classmethod(lambda cls, page_no, size: \
         cls.query.slice(page_no * size, (page_no + 1) * size))
 
 def find(cls, **kwargs):
-    print(kwargs)
     try:
         return cls.query.filter_by(**kwargs).all()
     except InvalidRequestError:
@@ -213,10 +212,6 @@ class Keyword(Base):
 
     def __repr__(self):
         return '<Keyword id={} name={}>'.format(self.id, self.name)
-
-    @classmethod
-    def get(cls, name):
-        return cls.query.filter_by(name=name).one_or_none()
 
 class Publication(Base):
     __tablename__ = 'publication'
