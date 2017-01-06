@@ -9,6 +9,18 @@ from flask_cors import CORS
 from . import database as db
 from . import profiling
 
+OKAY = 200
+CREATED = 201
+NOT_FOUND = 404
+BAD_REQUEST = 400
+
+def error_message(code, message):
+    response = { 'error_code': code
+               , 'message': message
+               }
+    return json.dumps(response), code
+
+DEFAULT_PAGE_SIZE = 25
 
 # Init Flask App
 app = Flask(__name__)
@@ -27,23 +39,23 @@ def top_keywords(profile):
 # ------------ PROFILE API ROUTES -----------------
 @app.route('/api/query/submit', methods=['POST'])
 def _submit_query():
-    return "This endpoint is obsolete. Use POST:/api/queries", 404
+    return "This endpoint is obsolete. Use POST:/api/queries", NOT_FOUND
 
 @app.route('/api/query/<uid>')
 def _get_query(uid):
-    return "This endpoint is obsolete. Use /api/queries/<uid>.", 404
+    return "This endpoint is obsolete. Use /api/queries/<uid>.", NOT_FOUND
 
 @app.route('/api/person/<person_id>/summary')
 def _person_summary(person_id):
-    return "This end point is obsolete. Use /api/people/<uid>.", 404
+    return "This end point is obsolete. Use /api/people/<uid>.", NOT_FOUND
 
 @app.route('/api/person/<person_id>/full')
 def _person_full(person_id):
-    return "This end point is obsolete. Use /api/people/<uid>.", 404
+    return "This end point is obsolete. Use /api/people/<uid>.", NOT_FOUND
 
 @app.route('/api/queries/<uid>')
 def query(uid):
-    return "This end point is obsolete. Use POST:/api/queries", 404
+    return "This end point is obsolete. Use POST:/api/queries", NOT_FOUND
 
 
 @app.route('/api/queries', methods=['POST'])
@@ -75,12 +87,9 @@ def queries():
 def profiles():
     try:
         page = int(request.args.get('page', 0))
-        size = int(request.args.get('page_size', 25))
+        size = int(request.args.get('page_size', DEFAULT_PAGE_SIZE))
     except ValueError:
-        response = { 'error_code': 415
-                   , 'message': 'page and page_size must be uint' 
-                   }
-        return json.dumps(response), 415
+        return error_message(BAD_REQUEST, 'page and page_size must be uint')
 
     count = db.Profile.count()
     if not count:
@@ -117,7 +126,7 @@ def profile(uid):
     """
     profile = db.Profile.get(uid)
     if not profile:
-        abort(404)
+        abort(NOT_FOUND)
     else:
         result = {}
         for attribute in ['name', 'email', 'faculty', 'department', 'campus',
@@ -132,12 +141,22 @@ def profile(uid):
 
         return json.dumps(result)
 
+@app.route('/api/people/find')
+def find_person():
+    try:
+        profiles = db.Profile.find(**{k: v for k, v in request.args.items()})
+        return json.dumps([url_for('profile', uid=p.id) for p in profiles])
+    except AttributeError as e:
+        return error_message(BAD_REQUEST, e.args[0])
+
 @app.route('/api/keywords/<keyword>')
 def keyword(keyword):
-    keyword = db.Keyword.get(keyword)
+    keyword = db.Keyword.find(name=keyword)
     if not keyword:
-        abort(404)
+        abort(NOT_FOUND)
     else:
+        assert len(keyword) == 1
+        keyword = keyword[0]
         result = { 'name': keyword.name
                  , 'profiles': [{ 'name': profile.name
                                 , 'email': profile.name
@@ -153,12 +172,9 @@ def publications():
     if request.method == 'GET':
         try:
             page = int(request.args.get('page', 0))
-            size = int(request.args.get('page_size', 25))
+            size = int(request.args.get('page_size', DEFAULT_PAGE_SIZE))
         except ValueError:
-            response = { 'error_code': 415
-                       , 'message': 'page and page_size must be uint' 
-                       }
-            return json.dumps(response), 415
+            return error_message(BAD_REQUEST, 'page and page_size must be uint')
 
         count = db.Publication.count()
         if not count:
@@ -191,18 +207,15 @@ def publications():
                     paper['authors'], 
                     paper['date']) 
             response = { 'success': True }
-            return json.dumps(response), 201
+            return json.dumps(response), CREATED
         else:
-            response = { 'error_code': 415
-                       , 'message': 'JSON, please.' 
-                       }
-            return json.dumps(response), 415
+            return error_message(BAD_REQUEST, 'JSON, please.')
 
 @app.route('/api/publications/<int:uid>')
 def publication(uid):
     pub = db.Publication.get(uid)
     if not pub:
-        abort(404)
+        abort(NOT_FOUND)
     else:
         result = { 'title': pub.title
                  , 'abstract': pub.abstract
@@ -225,12 +238,9 @@ def submit_keyword(uid):
         words = submission['words']
         profiling.add_user_keywords(words,uid)
         response = { 'success': True }
-        return json.dumps(response), 201
+        return json.dumps(response), CREATED
     else:
-        response = { 'error_code': 415
-                   , 'message': 'JSON, please.' 
-                   }
-        return json.dumps(response), 415
+        return error_message(BAD_REQUEST, 'JSON, please.')
 
 
 @app.teardown_appcontext
