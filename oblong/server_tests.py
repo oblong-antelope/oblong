@@ -210,6 +210,23 @@ class PeopleTestCase(ServerTestCase):
             }
         )
 
+    def testGoodFind(self):
+        response = self.app.get('/api/people/find?firstname=John&lastname=Smith')
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual(data, ['/api/people/1'])
+
+    def testBadFind(self):
+        response = self.app.get('/api/people/find?firstname=Flange')
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual(data, [])
+
+        response = self.app.get('/api/people/find?horse=horse')
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual(data['error_code'], 400)
+
     def testPeople(self):
         response = self.app.get('/api/people')
         data = json.loads(response.data.decode('utf-8'))
