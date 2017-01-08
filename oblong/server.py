@@ -133,7 +133,8 @@ def profile(uid):
                 'building', 'room', 'website']:
             result[attribute] = getattr(profile, attribute)
 
-        result['keywords'] = dict(top_keywords(profile,50))
+        result['keywords'] = dict(profile.keywords)
+        #result['keywords'] = dict(top_keywords(profile,50))
 
         result['publications'] = [{ 'title': pub.title
                                   , 'link': url_for('publication', uid=pub.id) 
