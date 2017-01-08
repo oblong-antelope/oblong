@@ -29,10 +29,10 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
-def top_keywords(profile):
+def top_keywords(profile, n):
     # take up to five of the highest-ranked keywords
     keywords = sorted(tuple(profile.keywords.items()),
-                      key=lambda p: p[1], reverse=True)[:5]
+                      key=lambda p: p[1], reverse=True)[:n]
     return tuple(zip(*keywords))[0]
 
 
@@ -77,7 +77,7 @@ def queries():
                 , 'email': profile.email
                 , 'faculty': profile.faculty
                 , 'department': profile.department
-                , 'keywords': top_keywords(profile)
+                , 'keywords': top_keywords(profile, 5)
                 , 'link': url_for('profile', uid=profile.id)
                 } for profile in profiles]
 
@@ -107,7 +107,7 @@ def profiles():
         result['this_page'] = [{ 'name': profile.name
                                , 'faculty': profile.faculty
                                , 'department': profile.department
-                               , 'keywords': top_keywords(profile)
+                               , 'keywords': top_keywords(profile, 5)
                                , 'link': url_for('profile', uid=profile.id)
                                } for profile in profiles]
 
@@ -133,7 +133,7 @@ def profile(uid):
                 'building', 'room', 'website']:
             result[attribute] = getattr(profile, attribute)
 
-        result['keywords'] = dict(profile.keywords)
+        result['keywords'] = dict(top_keywords(profile,50))
 
         result['publications'] = [{ 'title': pub.title
                                   , 'link': url_for('publication', uid=pub.id) 
