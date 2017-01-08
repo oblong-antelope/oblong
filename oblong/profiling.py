@@ -128,7 +128,7 @@ def get_keywords(text):
         stopwords = [line.rstrip(linesep) for line in f]
     
     #We don't want keywords to contain anything in this list
-    forbidden = ['.',',',';',':','?','!',')','[',']','<','>','"','1','2','3','4','5','6','7','8','9','0']
+    forbidden = ['.',',',';',':','?','!','+',')','(','[',']','/','<','>','"','1','2','3','4','5','6','7','8','9','0']
 
     # NLTK Chunking - detects noun phrases and phrases of form verb noun or adj noun
     patterns = """NP: {<JJ>*<NN><NNS>}
