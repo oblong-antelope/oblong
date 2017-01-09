@@ -33,7 +33,10 @@ def top_keywords(profile):
     # take up to five of the highest-ranked keywords
     keywords = sorted(tuple(profile.keywords.items()),
                       key=lambda p: p[1], reverse=True)[:5]
-    return tuple(zip(*keywords))[0]
+    if keywords:
+        return tuple(zip(*keywords))[0]
+    else:
+        return ()
 
 
 # ------------ PROFILE API ROUTES -----------------
@@ -69,7 +72,6 @@ def queries():
     """
     results = profiling.fulfill_query(request.get_data().decode('utf-8'))
     profiles = tuple(zip(*results))
-    print(profiles)
     if profiles:
         profiles = profiles[0]
         
