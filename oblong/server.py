@@ -1,5 +1,6 @@
 """Webserver to allow queries to user profiles."""
 from collections import defaultdict
+from itertools import repeat
 import json
 import os
 
@@ -20,7 +21,19 @@ def error_message(code, message):
                }
     return json.dumps(response), code
 
-DEFAULT_PAGE_SIZE = 25
+def obsolete(new_api, method='GET'):
+    def decorator(f):
+        """This function is obsolete"""
+        def wrapper(*args, **kwargs):
+            m = ('This endpoint is obsolete. Use {}:{}'
+                 .format(request.method, new_api))
+            return error_message(NOT_FOUND, m)
+        wrapper.__name__ = f.__name__
+        wrapper.__wrapped__ = f
+        return wrapper
+    return decorator
+
+DEFAULT_PAGE_SIZE = 10
 
 # Init Flask App
 app = Flask(__name__)
@@ -31,8 +44,10 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def top_keywords(profile):
     # take up to five of the highest-ranked keywords
+    print(profile.id, len(profile.keywords_))
     keywords = sorted(tuple(profile.keywords.items()),
                       key=lambda p: p[1], reverse=True)[:5]
+    print("hello there")
     if keywords:
         return tuple(zip(*keywords))[0]
     else:
@@ -41,24 +56,24 @@ def top_keywords(profile):
 
 # ------------ PROFILE API ROUTES -----------------
 @app.route('/api/query/submit', methods=['POST'])
-def _submit_query():
-    return "This endpoint is obsolete. Use POST:/api/queries", NOT_FOUND
+@obsolete('/api/queries')
+def _submit_query(): pass
 
 @app.route('/api/query/<uid>')
-def _get_query(uid):
-    return "This endpoint is obsolete. Use /api/queries/<uid>.", NOT_FOUND
+@obsolete('/api/queries/<uid>')
+def _get_query(uid): pass
 
 @app.route('/api/person/<person_id>/summary')
-def _person_summary(person_id):
-    return "This end point is obsolete. Use /api/people/<uid>.", NOT_FOUND
+@obsolete('/api/people/<uid>')
+def _person_summary(person_id): pass
 
 @app.route('/api/person/<person_id>/full')
-def _person_full(person_id):
-    return "This end point is obsolete. Use /api/people/<uid>.", NOT_FOUND
+@obsolete('/api/people/<uid>')
+def _person_full(person_id): pass
 
 @app.route('/api/queries/<uid>')
-def query(uid):
-    return "This end point is obsolete. Use POST:/api/queries", NOT_FOUND
+@obsolete('/api/queries')
+def _query(uid): pass
 
 
 @app.route('/api/queries', methods=['POST'])
@@ -70,11 +85,18 @@ def queries():
     and a list of results is hosted at that endpoint.
 
     """
-    results = profiling.fulfill_query(request.get_data().decode('utf-8'))
-    profiles = tuple(zip(*results))
-    if profiles:
-        profiles = profiles[0]
-        
+    try:
+        page = int(request.args.get('page', 0))
+        size = int(request.args.get('page_size', DEFAULT_PAGE_SIZE))
+    except ValueError:
+        return error_message(BAD_REQUEST, 'page and page_size must be uint')
+
+    count, profiles = profiling.fulfill_query(
+            request.get_data().decode('utf-8'),
+            page_no=page,
+            page_size=size
+            )
+    
     response = [{ 'name': profile.name
                 , 'email': profile.email
                 , 'faculty': profile.faculty
@@ -88,12 +110,16 @@ def queries():
 @app.route('/api/people')
 def profiles():
     try:
+        query = request.args.get('query', '')
         page = int(request.args.get('page', 0))
         size = int(request.args.get('page_size', DEFAULT_PAGE_SIZE))
     except ValueError:
         return error_message(BAD_REQUEST, 'page and page_size must be uint')
 
-    count = db.Profile.count()
+    count, profiles = (profiling.fulfill_query(query, page, size)
+                       if query else 
+                       (db.Profile.count(), db.Profile.get_page(page, size)))
+
     if not count:
         return json.dumps({"count": count})
     else:
@@ -105,8 +131,8 @@ def profiles():
             result['next_page'] = url_for('profiles', page=page + 1,
                                           page_size=size)
 
-        profiles = db.Profile.get_page(page, size)
         result['this_page'] = [{ 'name': profile.name
+                               , 'email': profile.email
                                , 'faculty': profile.faculty
                                , 'department': profile.department
                                , 'keywords': top_keywords(profile)
