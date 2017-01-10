@@ -28,4 +28,5 @@ if args.log_file:
     kwargs['filename'] = args.log_file
 logging.basicConfig(**kwargs)
 
-oblong.run(host=args.host, port=args.port)
+if __name__ == '__main__':
+    oblong.run(host=args.host, port=args.port)
