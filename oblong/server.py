@@ -141,12 +141,21 @@ def profiles():
 
         return json.dumps(result)
 
-@app.route('/api/people/<int:uid>')
+#TODO: Implement Put for submitting a user edited profile
+@app.route('/api/people/<int:uid>', method='[GET, PUT]')
 def profile(uid):
-    """Retrieves the full profile of a person.
+    """
+    GET: Retrieves the full profile of a person.
 
-    The full profile contains name, keywords as a dictionary of words
-    to frequencies, a list of publications and so on and so forth.
+        The full profile contains name, keywords as a dictionary of words
+        to frequencies, a list of publications and so on and so forth.
+
+    PUT: A modified profile is submitted for a person
+
+        The payload contains jwt (authentication token), name object,
+        faculty, department, email and website or a list of
+        keyword modification objects which contain the
+        keyword and the action (add/ irrelevant)
 
     Args:
         uid (str): The unique id of the person.
@@ -180,6 +189,8 @@ def find_person():
 
 @app.route('/api/keywords/<keyword>')
 def keyword(keyword):
+    """returns a list of profiles with this keyword
+    """
     keyword = db.Keyword.find(name=keyword)
     if not keyword:
         abort(NOT_FOUND)
@@ -198,6 +209,11 @@ def keyword(keyword):
 
 @app.route('/api/publications', methods=['GET', 'POST'])
 def publications():
+    """
+        GET: a paginated list of all publications.
+
+        POST: for submitting single publications
+    """
     if request.method == 'GET':
         try:
             page = int(request.args.get('page', 0))
@@ -259,8 +275,16 @@ def publication(uid):
                  }
         return json.dumps(result)
 
-@app.route('/api/keywords', methods=['POST'])
+#TODO: Change this to delete Garbage keywords
+@app.route('/api/keywords', methods=['POST', 'DELETE'])
 def submit_keyword(uid):
+    """currently obsolete, needs replacing
+       DELETE: accepts a list of user garbage keywords to be removed 
+               from all profiles
+               
+               The body contains a jwt (authentication token), and a list of
+               keywords.
+    """
     if request.is_json:
         submission = request.get_json()
         uid = submission['uid']
