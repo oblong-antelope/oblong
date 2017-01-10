@@ -131,7 +131,8 @@ def get_keywords(text):
     tagged_words = pos_tag(tokens)
 
     # retrieve list of boring words from file
-    with open(os.path.join(BASE_DIR, 'data', 'stopwords.txt'), 'r') as f:
+    stopwords_file = os.path.join(BASE_DIR, 'data', 'stopwords.txt')
+    with open(stopwords_file, 'r', encoding='utf-8') as f:
         stopwords = [line.rstrip(linesep) for line in f]
     
     #We don't want keywords to contain anything in this list
