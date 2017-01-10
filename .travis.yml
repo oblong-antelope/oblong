@@ -1,14 +1,13 @@
 language: python
 python:
-  - "3.5"
-
+- '3.5'
 cache: pip
-
 services:
-  - postgresql
-
-install: "python setup.py install"
-script: "python setup.py nosetests"
-
+- postgresql
+install: python setup.py install
+script: python setup.py nosetests
 notifications:
   slack: oblong-antelope:1eXsnKpfCiWpdAGGizILVk7j
+before_install:
+- openssl aes-256-cbc -K $encrypted_4e1d568d3b8a_key -iv $encrypted_4e1d568d3b8a_iv
+  -in deploy_rsa.enc -out deploy_rsa -d
