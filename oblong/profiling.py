@@ -104,14 +104,20 @@ def add_user_keywords(words, uid):
         words (list[str]): the keywords to add
         uid (int): id of the user whose profile we want to update
     """
-    USER_WEIGHT = 1000
+    USER_WEIGHT = 25
     profile = db.Profile.get(uid)
     for word in words:
         if word not in profile.keywords:
             profile.keywords[word] = 0
         profile.keywords[word] += USER_WEIGHT
     db.session.commit()
-    
+
+def remove_user_keywords(words, uid):
+    profile = db.Profile.get(uid)
+    for word in words:
+        if word in profile.keywords:
+            del profile.keywords[word]
+    db.session.commit()
 
 def get_keywords(text):
     """Gets the keywords from a text excerpt.

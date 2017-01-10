@@ -160,6 +160,7 @@ def profile(uid):
         uid (str): The unique id of the person.
 
     """
+    print('hoopy frood')
     if request.method == 'GET':
         return get_profile(uid)
     elif request.method == 'PUT':
@@ -189,6 +190,8 @@ def put_profile(uid):
         submission = request.get_json()
         if 'add_keyords' in submission:
             profiling.add_user_keywords(submission['add_keywords'],uid)
+        if 'remove_keyords' in submission:
+            profiling.remove_user_keywords(submission['remove_keywords'],uid)
         response = { 'success': True }
         return json.dumps(response), CREATED
     else:
@@ -302,7 +305,8 @@ def delete_keywords(uid):
     """
     if request.is_json:
         submission = request.get_json()
-        profiling.add_user_keywords(words,uid)
+        for word in submission:
+            db.session.delete(db.Keyword.find(name=word))
         response = { 'success': True }
         return json.dumps(response), CREATED
     else:
