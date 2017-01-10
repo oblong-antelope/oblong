@@ -17,18 +17,25 @@ nltk.data.path.append(os.path.join(BASE_DIR, 'data', 'nltk'))
 
 onto = Ontology() #import the ACM ontology
 
-def fulfill_query(text):
+def fulfill_query(text, page_no, page_size):
     """Fulfills a query by searching the database.
 
     Args:
         text (str): This string will be searched for keywords,
             and profiles containing those keywords will be returned.
+        page_no (int): The number of the page to return.
+        page_size (int): The number of results per page.
 
     """
     keywords = get_keywords(text)
     if not keywords:
         return []
-    return db.get_profiles_by_keywords(keywords)
+    else:
+        n, results = db.get_profiles_by_keywords(keywords, page_no, page_size)
+        profiles = tuple(zip(*results))
+        if profiles:
+            profiles = profiles[0]
+        return n, profiles
 
 def update_authors_profiles(title, abstract, authors, date):
     """Updates the profiles of the authors of a new paper.
