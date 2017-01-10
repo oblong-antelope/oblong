@@ -19,6 +19,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR travis-ci@battle.horse:/var/www/oblong
+  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR travis-ci@battle.horse:/var/www/oblong && ssh travis-ci@battle.horse -c 'touch /var/www/oblong/oblong.wsgi'
   on:
     branch: master
