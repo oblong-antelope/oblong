@@ -5,6 +5,35 @@ from flask import url_for
 from . import server, database as db
 from .database_tests import DatabaseTestCase
 
+class DefunctEndpointTestCase(DatabaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.app = server.app.test_client()
+
+    def testGetDefunctEndpoints(self):
+        subtests = ( ('/api/query/1', '/api/queries')
+                   , ('/api/person/1/summary', '/api/people/<uid>')
+                   , ('/api/person/1/full', '/api/people/<uid>')
+                   , ('/api/queries/1', '/api/queries')
+                   )
+        for endpoint, replacement in subtests:
+            with self.subTest(endpoint=endpoint):
+                response = self.app.get(endpoint)
+                self.assertEqual(response.status_code, 404)
+                body = json.loads(response.data.decode('utf-8'))
+                self.assertEqual(body['error_code'], 404)
+                self.assertIn(replacement, body['message'])
+
+    def testPostDefunctEndpoints(self):
+        subtests = ( ('/api/query/submit', '/api/queries'), )
+        for endpoint, replacement in subtests:
+            with self.subTest(endpoint=endpoint):
+                response = self.app.post(endpoint)
+                self.assertEqual(response.status_code, 404)
+                body = json.loads(response.data.decode('utf-8'))
+                self.assertEqual(body['error_code'], 404)
+                self.assertIn(replacement, body['message'])
+
 class ServerTestCase(DatabaseTestCase):
     maxDiff = None
 
@@ -80,42 +109,45 @@ class ServerTestCase(DatabaseTestCase):
 
 class QueryTestCase(ServerTestCase):
     def test_good_request(self):
-        response = self.app.post('/api/queries', data='argumentation')
+        response = self.app.get('/api/people?query=argumentation')
         data = json.loads(response.data.decode('utf-8'))
         
         self.assertEqual(data,
-            [ { 'name': { 'title': 'Ms'
-                        , 'first': 'Jane'
-                        , 'last': 'Doe'
-                        , 'initials': 'J W'
-                        , 'alias': None
-                        }
-              , 'email': 'jane.doe@ic.ac.uk'
-              , 'faculty': 'Engineering'
-              , 'department': 'Department of Civil Engineering'
-              , 'keywords': ['argumentation']
-              , 'link': '/api/people/2'
-              }
-            , { 'name': { 'title': 'Mr'
-                        , 'first': 'John'
-                        , 'last': 'Smith'
-                        , 'initials': 'J S'
-                        , 'alias': None
-                        }
-              , 'email': 'john.smith@ic.ac.uk'
-              , 'faculty': 'Natural Sciences'
-              , 'department': 'Department of Computing'
-              , 'keywords': ['machine learning', 'argumentation']
-              , 'link': '/api/people/1'
-              } 
-            ]
+            { 'count': 2
+            , 'this_page': 
+                [ { 'name': { 'title': 'Ms'
+                            , 'first': 'Jane'
+                            , 'last': 'Doe'
+                            , 'initials': 'J W'
+                            , 'alias': None
+                            }
+                  , 'email': 'jane.doe@ic.ac.uk'
+                  , 'faculty': 'Engineering'
+                  , 'department': 'Department of Civil Engineering'
+                  , 'keywords': ['argumentation']
+                  , 'link': '/api/people/2'
+                  }
+                , { 'name': { 'title': 'Mr'
+                            , 'first': 'John'
+                            , 'last': 'Smith'
+                            , 'initials': 'J S'
+                            , 'alias': None
+                            }
+                  , 'email': 'john.smith@ic.ac.uk'
+                  , 'faculty': 'Natural Sciences'
+                  , 'department': 'Department of Computing'
+                  , 'keywords': ['machine learning', 'argumentation']
+                  , 'link': '/api/people/1'
+                  } 
+                ]
+            }
         )
 
     def test_no_results(self):
-        response = self.app.post('/api/queries', data='bad!!keyword')
+        response = self.app.get('/api/people?query=bad%20keyword')
         data = json.loads(response.data.decode('utf-8'))
         
-        self.assertEqual(data, [])
+        self.assertEqual(data, {'count': 0})
 
 class PublicationSubmitTestCase(ServerTestCase):
     def test_known_author(self):
@@ -241,6 +273,7 @@ class PeopleTestCase(ServerTestCase):
                       , 'initials': 'J S'
                       , 'alias': None
                       }
+                  , 'email': 'john.smith@ic.ac.uk'
                   , 'faculty': 'Natural Sciences'
                   , 'department': 'Department of Computing'
                   , 'keywords': ['machine learning', 'argumentation']
@@ -253,6 +286,7 @@ class PeopleTestCase(ServerTestCase):
                       , 'initials': 'J W'
                       , 'alias': None
                       }
+                  , 'email': 'jane.doe@ic.ac.uk'
                   , 'faculty': 'Engineering'
                   , 'department': 'Department of Civil Engineering'
                   , 'keywords': ['argumentation']
@@ -265,6 +299,7 @@ class PeopleTestCase(ServerTestCase):
                       , 'initials': 'M Y'
                       , 'alias': 'Mabs'
                       }
+                  , 'email': 'mary.sue@ic.ac.uk'
                   , 'faculty': 'Medicine'
                   , 'department': 'Department of Lungs'
                   , 'keywords': ['machine learning']
