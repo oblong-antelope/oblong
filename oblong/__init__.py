@@ -4,7 +4,7 @@ Fields submissions of papers from various scrapers, and requests from
 various front ends.
 
 """
-__version__ = 0.3
+__version__ = 0.4
 __authors__ = [ 'Aran Dhaliwal <aran.dhaliwal14@imperial.ac.uk>'
               , 'Blaine Rogers <blaine.rogers14@imperial.ac.uk>'
               , 'Jonathan Sutton <jonathan.sutton14@imperial.ac.uk>'
