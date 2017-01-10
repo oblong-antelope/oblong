@@ -4,7 +4,11 @@ from . import database as db
 
 Postgresql = testing.postgresql.PostgresqlFactory(cache_initialized_db=True)
 
-def tearDownModule(self):
+def gpbk(keywords):
+    count, results = db.get_profiles_by_keywords(keywords, 0, 25)
+    return count, list(results)
+
+def tearDownModule():
     # clear cached database at end of tests
     Postgresql.clear_cache()
 
@@ -74,71 +78,55 @@ class QueryTestCase(DatabaseTestCase):
 
 class QueryBasicTestCase(QueryTestCase):
     def testFirstname(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Mary'])
-                        , [(self.mary, 5.)]
-                        )
+        self.assertEqual(gpbk(['Mary']), (1, [(self.mary, 5.)]))
 
     def testLastname(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Doe'])
-                        , [(self.jane, 9.)]
-                        )
+        self.assertEqual(gpbk(['Doe']), (1, [(self.jane, 9.)]))
     
     def testDepartment(self):
-        self.assertEqual( db.get_profiles_by_keywords(['DoC'])
-                        , [(self.peng, 2.33)]
-                        )
+        self.assertEqual(gpbk(['DoC']), (1, [(self.peng, 2.33)]))
 
     def testFaculty(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Engineering'])
-                        , [(self.peng, 2.33)]
-                        )
+        self.assertEqual(gpbk(['Engineering']), (1, [(self.peng, 2.33)]))
 
     def testCampus(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Hammersmith'])
-                        , [(self.peng, 2.33)]
-                        )
+        self.assertEqual(gpbk(['Hammersmith']), (1, [(self.peng, 2.33)]))
 
     def testDuplicateFields(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Peng'])
-                        , [(self.mary, 5.), (self.peng, 2.33)]
+        self.assertEqual( gpbk(['Peng'])
+                        , (2, [(self.mary, 5.), (self.peng, 2.33)])
                         )
 
     def testBothNames(self):
-        self.assertEqual( db.get_profiles_by_keywords(['John', 'Smith'])
-                        , [(self.john, 1.)]
-                        )
+        self.assertEqual(gpbk(['John', 'Smith']), (1, [(self.john, 1.)]))
 
     def testFieldMatchingLowercase(self):
-        self.assertEqual( db.get_profiles_by_keywords(['mary'])
-                        , [(self.mary, 5.)]
-                        )
+        self.assertEqual(gpbk(['mary']), (1, [(self.mary, 5.)]))
 
     def testFieldAndKeywordMatching(self):
-        self.assertEqual( db.get_profiles_by_keywords(['Mary', 'horse'])
-                        , [(self.mary, 2.)]
-                        )
+        self.assertEqual(gpbk(['Mary', 'horse']), (1, [(self.mary, 2.)]))
 
 class QuerySortingTestCase(QueryTestCase):
     def testOneKeyword(self):
-        self.assertEqual( db.get_profiles_by_keywords(['horse'])
-                        , [(self.mary, 2.), (self.john, 1.)]
+        self.assertEqual( gpbk(['horse'])
+                        , (2, [(self.mary, 2.), (self.john, 1.)])
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['cart'])
-                        , [(self.jane, 4.), (self.mary, 3.)]
+        self.assertEqual( gpbk(['cart'])
+                        , (2, [(self.jane, 4.), (self.mary, 3.)])
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['descartes'])
-                        , [(self.jane, 5.)]
+        self.assertEqual( gpbk(['descartes'])
+                        , (1, [(self.jane, 5.)])
                         )
-        self.assertEqual(db.get_profiles_by_keywords(['not in db']), [])
+        self.assertEqual(gpbk(['not in db']), (0., []))
 
     def testManyKeywords(self):
         """Query is OR, so return profiles with any of the keywords."""
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'cart'])
-                        , [(self.mary, 5.), (self.jane, 4.), (self.john, 1.)]
+        self.assertEqual( gpbk(['horse', 'cart'])
+                        , (3, [(self.mary, 5.), (self.jane, 4.), (self.john, 1.)])
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'descartes'])
-                        , [(self.jane, 5.), (self.mary, 2.), (self.john, 1.)]
+        self.assertEqual( gpbk(['horse', 'descartes'])
+                        , (3, [(self.jane, 5.), (self.mary, 2.), (self.john, 1.)])
                         )
-        self.assertEqual( db.get_profiles_by_keywords(['horse', 'not in db'])
-                        , [(self.mary, 2.), (self.john, 1.)]
+        self.assertEqual( gpbk(['horse', 'not in db'])
+                        , (2, [(self.mary, 2.), (self.john, 1.)])
                         )

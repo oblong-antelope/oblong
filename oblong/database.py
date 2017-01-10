@@ -254,7 +254,7 @@ def init(connection_url):
     Base.query = session.query_property()
     Base.metadata.create_all(bind=engine)
 
-def get_profiles_by_keywords(keywords):
+def get_profiles_by_keywords(keywords, page_no, page_size):
     """Gets a list of profiles that have any of the keywords.
 
     The weighting of a profile is calculated as the sum of the
@@ -265,8 +265,10 @@ def get_profiles_by_keywords(keywords):
         keywords (Sequence[str]): The keywords to search for.
 
     Returns:
-        (List[Tuple[Profile, float]]): A list of profiles and
-        weightings, sorted by weighting in descending order.
+        (int, List[Tuple[Profile, float]]): The number of results
+        and a list of profiles and weightings, 
+        sorted by weighting in descending order, corresponding to
+        the requested page.
 
     """
     keywords = [k.lower() for k in keywords]
@@ -310,4 +312,6 @@ def get_profiles_by_keywords(keywords):
     if keywords:
         q = q.filter(Keyword.name.in_(keywords))
 
-    return q.group_by(Profile.id).order_by(desc('weight_sum')).all()
+    q = q.group_by(Profile.id).order_by(desc('weight_sum'))
+    count = q.count()
+    return count, q.slice(page_no * page_size, (page_no + 1) * page_size)
