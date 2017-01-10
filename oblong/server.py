@@ -44,10 +44,9 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def top_keywords(profile):
     # take up to five of the highest-ranked keywords
-    print(profile.id, len(profile.keywords_))
+    app.logger.info("Sorting keywords for profile {}".format(profile.id))
     keywords = sorted(tuple(profile.keywords.items()),
                       key=lambda p: p[1], reverse=True)[:5]
-    print("hello there")
     if keywords:
         return tuple(zip(*keywords))[0]
     else:
@@ -142,7 +141,7 @@ def profiles():
         return json.dumps(result)
 
 #TODO: Implement Put for submitting a user edited profile
-@app.route('/api/people/<int:uid>', method='[GET, PUT]')
+@app.route('/api/people/<int:uid>', methods=['GET', 'PUT'])
 def profile(uid):
     """
     GET: Retrieves the full profile of a person.
@@ -161,6 +160,12 @@ def profile(uid):
         uid (str): The unique id of the person.
 
     """
+    if request.method == 'GET':
+        return get_profile(uid)
+    elif request.method == 'PUT':
+        return put_profile(uid)
+
+def get_profile(uid):
     profile = db.Profile.get(uid)
     if not profile:
         abort(NOT_FOUND)
@@ -178,6 +183,16 @@ def profile(uid):
                                   } for pub in profile.publications]
 
         return json.dumps(result)
+
+def put_profile(uid):
+    if request.is_json:
+        submission = request.get_json()
+        if 'add_keyords' in submission:
+            profiling.add_user_keywords(submission['add_keywords'],uid)
+        response = { 'success': True }
+        return json.dumps(response), CREATED
+    else:
+        return error_message(BAD_REQUEST, 'JSON, please.')
 
 @app.route('/api/people/find')
 def find_person():
@@ -276,9 +291,9 @@ def publication(uid):
         return json.dumps(result)
 
 #TODO: Change this to delete Garbage keywords
-@app.route('/api/keywords', methods=['POST', 'DELETE'])
-def submit_keyword(uid):
-    """currently obsolete, needs replacing
+@app.route('/api/keywords', methods=['DELETE'])
+def delete_keywords(uid):
+    """
        DELETE: accepts a list of user garbage keywords to be removed 
                from all profiles
                
@@ -287,8 +302,6 @@ def submit_keyword(uid):
     """
     if request.is_json:
         submission = request.get_json()
-        uid = submission['uid']
-        words = submission['words']
         profiling.add_user_keywords(words,uid)
         response = { 'success': True }
         return json.dumps(response), CREATED
