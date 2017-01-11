@@ -144,12 +144,12 @@ class ProfileKeywordAssociation(Base):
             backref=backref(
                 'keywords_',
                 collection_class=attribute_mapped_collection('keyword'),
-                cascade='all, delete, delete-orphan'
+                cascade='all, delete'
                 )
             )
     keyword_ = relationship('Keyword', 
             back_populates='profiles_',
-            cascade='all, delete, delete-orphan')
+            cascade='all, delete')
     keyword = association_proxy('keyword_', 'name',
             creator=lambda name: get_one_or_create(Keyword, name=name)[0])
 
@@ -176,7 +176,7 @@ class Profile(Base):
     publications = relationship('Publication',
             secondary=profile_publication_association,
             back_populates='authors',
-            cascade='all, delete, delete-orphan')
+            cascade='all, delete')
 
     @property
     def name(self):
@@ -226,7 +226,7 @@ class Publication(Base):
     authors = relationship('Profile',
             secondary=profile_publication_association,
             back_populates='publications',
-            cascade='all, delete, delete-orphan')
+            cascade='all, delete')
 
     def __repr__(self):
         title = self.title if len(self.title) > 20 else self.title[:17] + '...'
