@@ -108,7 +108,7 @@ class QueryBasicTestCase(QueryTestCase):
         self.assertEqual(gpbk(['Mary', 'horse']), (1, [(self.mary, 2.)]))
 
     def testPartialQuery(self):
-        self.assertEqual(gpbk(['porcupine']), (1, [(self.john, 1.25)]))
+        self.assertEqual(gpbk(['porcupine']), (1, [(self.john, 1.25)])) 
 
 class QuerySortingTestCase(QueryTestCase):
     def testOneKeyword(self):

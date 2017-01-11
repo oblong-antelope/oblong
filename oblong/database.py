@@ -315,7 +315,7 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
         keywords.remove(k)
 
     if keywords:
-        q = q.filter(or_(*[Keyword.name.like(k) for k in keywords]))
+        q = q.filter(or_(*[Keyword.name.like("%"+k+"%") for k in keywords]))
 
     q = q.group_by(Profile.id).order_by(desc('weight_sum'))
     count = q.count()
