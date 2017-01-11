@@ -48,7 +48,7 @@ Examples:
 """
 from sqlalchemy import (create_engine, Table, Column, 
         Enum, Integer, Float, Text, String, Date, ForeignKey,
-        func, exists, desc)
+        func, exists, desc, or_)
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
@@ -315,7 +315,7 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
         keywords.remove(k)
 
     if keywords:
-        q = q.filter(reduce(operator.or_, [Keyword.name.like(keyword) for keyword in keywords]))
+        q = q.filter(or_(*[Keyword.name.like(k) for k in keywords]))
 
     q = q.group_by(Profile.id).order_by(desc('weight_sum'))
     count = q.count()
