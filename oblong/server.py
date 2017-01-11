@@ -124,11 +124,15 @@ def profiles():
     else:
         result = { 'count': count }
         if page > 0:
-            result['previous_page'] = url_for('profiles', page=page - 1,
-                                              page_size=size)
+            kwargs = {'page': page - 1, 'page_size': size}
+            if query:
+                kwargs['query'] = query
+            result['previous_page'] = url_for('profiles', **kwargs)
         if (page + 1) * size < count:
-            result['next_page'] = url_for('profiles', page=page + 1,
-                                          page_size=size)
+            kwargs = {'page': page - 1, 'page_size': size}
+            if query:
+                kwargs['query'] = query
+            result['next_page'] = url_for('profiles', **kwargs)
 
         result['this_page'] = [{ 'name': profile.name
                                , 'email': profile.email
