@@ -83,12 +83,22 @@ def update_authors_profiles(title, abstract, authors, date):
                 firstname=author['name']['first'],
                 lastname=author['name']['last'],
                 faculty=author['faculty'])
+
+        profile_weightings = weightings.copy()
+        if profile.keywords:
+            for word in weightings:
+                weightings[word] /= len(profile.keywords)
         
         #update weightings
         for word in keywords:
             if word not in profile.keywords:
                 profile.keywords[word] = 0
-            profile.keywords[word] += weightings[word]
+            profile.keywords[word] += profile_weightings[word]
+
+        # scale between 0 and 100
+        m = max(profile.keywords.values()) if profile.keywords else 1
+        for word in profile.keywords:
+            profile.keywords[word] *= 100 / m
 
         profile.publications.append(publication)
     db.session.commit()
@@ -104,12 +114,10 @@ def add_user_keywords(words, uid):
         words (list[str]): the keywords to add
         uid (int): id of the user whose profile we want to update
     """
-    USER_WEIGHT = 25
     profile = db.Profile.get(uid)
     for word in words:
-        if word not in profile.keywords:
-            profile.keywords[word] = 0
-        profile.keywords[word] += USER_WEIGHT
+        profile.keywords[word] = 100.0
+
     db.session.commit()
 
 def remove_user_keywords(words, uid):
