@@ -29,7 +29,7 @@ def fulfill_query(text, page_no, page_size):
     """
     keywords = get_keywords(text)
     if not keywords:
-        return []
+        return 0, []
     else:
         n, results = db.get_profiles_by_keywords(keywords, page_no, page_size)
         profiles = tuple(zip(*results))

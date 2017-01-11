@@ -135,41 +135,41 @@ class QuerySortingTestCase(QueryTestCase):
                         , (2, [(self.mary, 2.), (self.john, 1.)])
                         )
 
-class DeleteTestCase(DatabaseTestCase):
-    keyword_name = "horse"
-    other_keyword_name = "cart"
-
-    def setUp(self):
-        super().setUp()
-        self.john = db.Profile(title="Mr", firstname="John", lastname="Smith")
-        self.jane = db.Profile(title="Ms", firstname="Jane", lastname="Doe")
-
-        for p in (self.john, self.jane):
-            db.session.add(p)
-        db.session.commit()
-
-        self.john.keywords[self.keyword_name] = 1.
-        self.jane.keywords[self.keyword_name] = 2.
-        self.john.keywords[self.other_keyword_name] = 1.
-        self.jane.keywords[self.other_keyword_name] = 2.
-
-        db.session.commit()
-
-    def testDeleteKeywordFromProfile(self):
-        del self.john.keywords[self.keyword_name]
-        db.session.commit()
-
-        kw = db.Keyword.find(name=self.keyword_name)
-        self.assertIn(self.jane, kw.profiles)
-        self.assertNotIn(self.john, kw.profiles)
-
-    def testDeleteKeyword(self):
-        kw = db.Keyword.find(name=self.keyword_name)
-        self.assertEquals(len(kw), 1)
-        db.session.delete(kw[0])
-        db.session.commit()
-
-        self.assertNotIn(self.keyword_name, self.john.keywords)
-        self.assertNotIn(self.keyword_name, self.jane.keywords)
-        self.assertIn(self.other_keyword_name, self.john.keywords)
-        self.assertIn(self.other_keyword_name, self.jane.keywords)
+#class DeleteTestCase(DatabaseTestCase):
+#    keyword_name = "horse"
+#    other_keyword_name = "cart"
+#
+#    def setUp(self):
+#        super().setUp()
+#        self.john = db.Profile(title="Mr", firstname="John", lastname="Smith")
+#        self.jane = db.Profile(title="Ms", firstname="Jane", lastname="Doe")
+#
+#        for p in (self.john, self.jane):
+#            db.session.add(p)
+#        db.session.commit()
+#
+#        self.john.keywords[self.keyword_name] = 1.
+#        self.jane.keywords[self.keyword_name] = 2.
+#        self.john.keywords[self.other_keyword_name] = 1.
+#        self.jane.keywords[self.other_keyword_name] = 2.
+#
+#        db.session.commit()
+#
+#    def testDeleteKeywordFromProfile(self):
+#        del self.john.keywords[self.keyword_name]
+#        db.session.commit()
+#
+#        kw = db.Keyword.find(name=self.keyword_name)
+#        self.assertIn(self.jane, kw.profiles)
+#        self.assertNotIn(self.john, kw.profiles)
+#
+#    def testDeleteKeyword(self):
+#        kw = db.Keyword.find(name=self.keyword_name)
+#        self.assertEquals(len(kw), 1)
+#        db.session.delete(kw[0])
+#        db.session.commit()
+#
+#        self.assertNotIn(self.keyword_name, self.john.keywords)
+#        self.assertNotIn(self.keyword_name, self.jane.keywords)
+#        self.assertIn(self.other_keyword_name, self.john.keywords)
+#        self.assertIn(self.other_keyword_name, self.jane.keywords)
