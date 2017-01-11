@@ -67,6 +67,7 @@ class QueryTestCase(DatabaseTestCase):
             db.session.add(p)
         db.session.commit()
 
+        self.john.keywords["porcupine taming"] = 1.25
         self.john.keywords["horse"] = 1.
         self.mary.keywords["horse"] = 2.
         self.mary.keywords["cart"] = 3.
@@ -105,6 +106,9 @@ class QueryBasicTestCase(QueryTestCase):
 
     def testFieldAndKeywordMatching(self):
         self.assertEqual(gpbk(['Mary', 'horse']), (1, [(self.mary, 2.)]))
+
+    def testPartialQuery(self):
+        self.assertEqual(gpbk(['porcupine']), (1, [(self.john, 1.25)])
 
 class QuerySortingTestCase(QueryTestCase):
     def testOneKeyword(self):
