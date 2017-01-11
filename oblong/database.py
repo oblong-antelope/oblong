@@ -291,7 +291,7 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
                        , Profile.department
                        , Profile.campus
                        , Profile.faculty
-                       , func.concat('%', Profile.firstname, ' ' Profile.lastname, '%')
+                       , func.concat(Profile.firstname, ' ', Profile.lastname)
                        ]
 
     searched_columns = [func.lower(s) for s in searched_columns]
