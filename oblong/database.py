@@ -318,8 +318,10 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
     if cond is not None:
         q = q.filter(cond)
 
-    for k in notkeywords:
-        keywords.remove(k)
+    for k0 in notkeywords:
+        for k1 in keywords:
+            if k1 in k0:
+                keywords.remove(k1)
 
     if keywords:
         q = q.filter(contains_any(Keyword.name, keywords))

@@ -61,7 +61,7 @@ class QueryTestCase(DatabaseTestCase):
         self.jane = db.Profile(title="Ms", firstname="Jane", lastname="Doe")
         self.mary = db.Profile(title="Mrs", firstname="Mary", lastname="Peng")
         self.peng = db.Profile(title="Mr", firstname="Peng", lastname="Peng",
-                department="DoC", faculty="Engineering", campus="Hammersmith")
+                department="DoC", faculty="Engineering", campus="South Kensington")
 
         for p in (self.john, self.jane, self.mary, self.peng):
             db.session.add(p)
@@ -91,7 +91,7 @@ class QueryBasicTestCase(QueryTestCase):
         self.assertEqual(gpbk(['Engineering']), (1, [(self.peng, 2.33)]))
 
     def testCampus(self):
-        self.assertEqual(gpbk(['Hammersmith']), (1, [(self.peng, 2.33)]))
+        self.assertEqual(gpbk(['South Kensington']), (1, [(self.peng, 2.33)]))
 
     def testDuplicateFields(self):
         self.assertEqual( gpbk(['Peng'])
@@ -125,12 +125,13 @@ class QuerySortingTestCase(QueryTestCase):
         self.assertEqual(gpbk(['not in db']), (0., []))
 
     def testManyKeywords(self):
-        """Query is OR, so return profiles with any of the keywords."""
+        # Query is OR, so return profiles with any of the keywords.
+        # Because we're doing fuzzy queries, cart matches both cart and descartes
         self.assertEqual( gpbk(['horse', 'cart'])
-                        , (3, [(self.mary, 5.), (self.jane, 4.), (self.john, 1.)])
+                        , (3, [(self.jane, 9.), (self.mary, 5.), (self.john, 1.)])
                         )
         self.assertEqual( gpbk(['horse', 'descartes'])
-                        , (3, [(self.jane, 9.), (self.mary, 2.), (self.john, 1.)])
+                        , (3, [(self.jane, 5.), (self.mary, 2.), (self.john, 1.)])
                         )
         self.assertEqual( gpbk(['horse', 'not in db'])
                         , (2, [(self.mary, 2.), (self.john, 1.)])
