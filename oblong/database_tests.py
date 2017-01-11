@@ -99,7 +99,8 @@ class QueryBasicTestCase(QueryTestCase):
                         )
 
     def testBothNames(self):
-        self.assertEqual(gpbk(['John', 'Smith']), (1, [(self.john, 1.)]))
+        self.assertEqual(gpbk(['John', 'Smith']), (1, [(self.john, 2.25)]))
+        self.assertEqual(gpbk(['John Smith']), (1, [(self.john, 2.25)]))
 
     def testFieldMatchingLowercase(self):
         self.assertEqual(gpbk(['mary']), (1, [(self.mary, 5.)]))
@@ -116,7 +117,7 @@ class QuerySortingTestCase(QueryTestCase):
                         , (2, [(self.mary, 2.), (self.john, 1.)])
                         )
         self.assertEqual( gpbk(['cart'])
-                        , (2, [(self.jane, 4.), (self.mary, 3.)])
+                        , (2, [(self.jane, 9.), (self.mary, 3.)])
                         )
         self.assertEqual( gpbk(['descartes'])
                         , (1, [(self.jane, 5.)])
@@ -129,7 +130,7 @@ class QuerySortingTestCase(QueryTestCase):
                         , (3, [(self.mary, 5.), (self.jane, 4.), (self.john, 1.)])
                         )
         self.assertEqual( gpbk(['horse', 'descartes'])
-                        , (3, [(self.jane, 5.), (self.mary, 2.), (self.john, 1.)])
+                        , (3, [(self.jane, 9.), (self.mary, 2.), (self.john, 1.)])
                         )
         self.assertEqual( gpbk(['horse', 'not in db'])
                         , (2, [(self.mary, 2.), (self.john, 1.)])

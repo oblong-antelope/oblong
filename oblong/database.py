@@ -276,6 +276,9 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
         the requested page.
 
     """
+    def contains_any(col, keywords):
+        return or_(*[col.like('%' + k + '%') for k in keywords])
+ 
     keywords = [k.lower() for k in keywords]
 
     weight_sum = (func
@@ -288,6 +291,7 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
                        , Profile.department
                        , Profile.campus
                        , Profile.faculty
+                       , func.concat('%', Profile.firstname, ' ' Profile.lastname, '%')
                        ]
 
     searched_columns = [func.lower(s) for s in searched_columns]
@@ -300,7 +304,10 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
     notkeywords = set()
     cond = None
     for col in searched_columns:
-        matches = session.query(col).filter(col.in_(keywords)).distinct().all()
+        matches = (session.query(col)
+                  .filter(contains_any(col, keywords))
+                  .distinct().all()
+                  )
         matches = [m[0] for m in matches]
         notkeywords |= set(matches)
         if matches:
@@ -315,7 +322,7 @@ def get_profiles_by_keywords(keywords, page_no, page_size):
         keywords.remove(k)
 
     if keywords:
-        q = q.filter(or_(*[Keyword.name.like("%"+k+"%") for k in keywords]))
+        q = q.filter(contains_any(Keyword.name, keywords))
 
     q = q.group_by(Profile.id).order_by(desc('weight_sum'))
     count = q.count()
